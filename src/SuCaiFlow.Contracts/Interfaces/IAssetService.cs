@@ -2,9 +2,10 @@ using SuCaiFlow.Contracts.Entities;
 
 namespace SuCaiFlow.Contracts.Interfaces;
 
-public interface IAssetRepository : IRepository<CollectedAsset> {
+public interface IAssetService {
+    Task<CollectedAsset?> GetAssetByIdAsync(Guid assetId);
     Task<IEnumerable<CollectedAsset>> GetAssetsByTaskIdAsync(Guid taskId);
-    Task<IEnumerable<CollectedAsset>> GetAssetsByStatusAsync(AssetStatus status);
-    Task<CollectedAsset?> GetByUrlAsync(string url);
+    Task<IEnumerable<CollectedAsset>> GetAllAssetsAsync();
+    Task<bool> DeleteAssetByIdAsync(Guid assetId);
     Task<bool> DeleteAssetsByTaskIdAsync(Guid taskId);
 }
