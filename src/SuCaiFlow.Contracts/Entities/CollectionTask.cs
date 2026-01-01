@@ -11,17 +11,12 @@ namespace SuCaiFlow.Contracts.Entities
         
         public string Description { get; set; } = string.Empty;
         
-        public CollectionTaskStatus Status { get; set; }
-        
+        [Required]
         public string Url { get; set; } = string.Empty;
         
         public string Selector { get; set; } = string.Empty;
         
-        public int MaxConcurrency { get; set; } = 5;
-        
-        public int MaxRetries { get; set; } = 3;
-        
-        public Dictionary<string, string> Parameters { get; set; } = new();
+        public CollectionTaskStatus Status { get; set; } = CollectionTaskStatus.Pending;
         
         public DateTime CreatedAt { get; set; }
         
@@ -29,16 +24,20 @@ namespace SuCaiFlow.Contracts.Entities
         
         public DateTime? CompletedAt { get; set; }
         
-        public string? ErrorMessage { get; set; }
+        public int MaxConcurrency { get; set; } = 5;
         
-        public List<CollectedAsset> Assets { get; set; } = new();
+        public int AssetsCollectedCount { get; set; } = 0;
         
         public int TotalAssetsExpected { get; set; } = 0;
         
-        public int AssetsCollectedCount { get; set; } = 0;
+        public string? ErrorMessage { get; set; }
+        
+        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
         
         public Guid? ConfigId { get; set; }
         
         public CollectionTaskConfig? Config { get; set; }
+        
+        public List<CollectedAsset> Assets { get; set; } = new List<CollectedAsset>();
     }
 }

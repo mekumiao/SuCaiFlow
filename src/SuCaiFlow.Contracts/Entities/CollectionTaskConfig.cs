@@ -11,29 +11,25 @@ namespace SuCaiFlow.Contracts.Entities
         
         public string Description { get; set; } = string.Empty;
         
-        public string SiteUrl { get; set; } = string.Empty;
-        
         public string Selector { get; set; } = string.Empty;
         
-        public string PaginationSelector { get; set; } = string.Empty;
+        public string? SiteUrl { get; set; }
         
-        public string NextPagePattern { get; set; } = string.Empty;
-        
-        public Dictionary<string, string> RequestHeaders { get; set; } = new();
-        
-        public Dictionary<string, string> SearchParameters { get; set; } = new();
-        
-        public Dictionary<string, string> AdditionalSettings { get; set; } = new();
-        
-        public int MaxConcurrency { get; set; } = 5;
-        
-        public int MaxRetries { get; set; } = 3;
+        public string? PaginationSelector { get; set; }
         
         public int MaxParseItems { get; set; } = 100;
         
         public int RequestDelayMs { get; set; } = 500;
         
         public bool EnableAutoPagination { get; set; } = true;
+        
+        public string? NextPagePattern { get; set; }
+        
+        public Dictionary<string, string> AdditionalSettings { get; set; } = new Dictionary<string, string>();
+        
+        public Dictionary<string, string> RequestHeaders { get; set; } = new Dictionary<string, string>();
+        
+        public Dictionary<string, string> SearchParameters { get; set; } = new Dictionary<string, string>();
         
         public DateTime CreatedAt { get; set; }
         

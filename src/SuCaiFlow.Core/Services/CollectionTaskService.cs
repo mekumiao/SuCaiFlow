@@ -131,5 +131,25 @@ namespace SuCaiFlow.Core.Services
 
             return result;
         }
+
+        public async Task<bool> UpdateTaskProgressAsync(Guid taskId, int assetsCollected, int totalExpected)
+        {
+            var task = await _collectionTaskRepository.GetByIdAsync(taskId);
+            if (task == null)
+            {
+                _logger.LogWarning("Attempted to update progress for non-existent task with ID: {TaskId}", taskId);
+                return false;
+            }
+
+            task.AssetsCollectedCount = assetsCollected;
+            task.TotalAssetsExpected = totalExpected;
+
+            await _collectionTaskRepository.UpdateAsync(task);
+            await _collectionTaskRepository.SaveChangesAsync();
+
+            _logger.LogInformation("Updated progress for task {TaskId}: {AssetsCollected}/{TotalExpected}", taskId, assetsCollected, totalExpected);
+
+            return true;
+        }
     }
 }

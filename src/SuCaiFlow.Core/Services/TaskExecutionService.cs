@@ -46,5 +46,16 @@ namespace SuCaiFlow.Core.Services
             _logger.LogWarning("任务 {TaskId} 不在运行状态", taskId);
             return false;
         }
+
+        public async Task<bool> MarkTaskAsFailedAsync(Guid taskId)
+        {
+            if (_runningTasks.Remove(taskId))
+            {
+                _logger.LogInformation("标记任务 {TaskId} 为失败状态", taskId);
+                return true;
+            }
+            _logger.LogWarning("任务 {TaskId} 不在运行状态", taskId);
+            return false;
+        }
     }
 }

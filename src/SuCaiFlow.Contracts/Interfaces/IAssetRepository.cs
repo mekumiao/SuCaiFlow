@@ -4,10 +4,8 @@ namespace SuCaiFlow.Contracts.Interfaces
 {
     public interface IAssetRepository : IRepository<CollectedAsset>
     {
-        Task<List<CollectedAsset>> GetByTaskIdAsync(Guid taskId);
-        Task<List<CollectedAsset>> GetByTaskIdWithStatusAsync(Guid taskId, CollectionTaskStatus status);
-        Task<bool> ExistsByTaskIdAsync(Guid taskId);
-        Task<bool> DeleteAssetsByTaskIdAsync(Guid taskId);
+        Task<List<CollectedAsset>> GetAssetsByTaskIdAsync(Guid taskId);
+        Task<List<CollectedAsset>> GetAssetsByStatusAsync(AssetStatus status);
         Task<CollectedAsset?> GetByUrlAsync(string url);
     }
 }

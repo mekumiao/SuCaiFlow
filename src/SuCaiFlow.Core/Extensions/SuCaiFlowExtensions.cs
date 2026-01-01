@@ -15,6 +15,10 @@ namespace SuCaiFlow.Core.Extensions
             services.AddScoped<IEventPublisher, EventPublisher>();
             services.AddScoped<ITaskExecutionService, TaskExecutionService>();
             services.AddScoped<ISiteCollectorManager, SiteCollectorManager>();
+            services.AddScoped<CollectionEngineService>();
+
+            // 注册HttpClient
+            services.AddHttpClient();
 
             return services;
         }
@@ -30,6 +34,10 @@ namespace SuCaiFlow.Core.Extensions
             services.AddScoped<IEventPublisher, EventPublisher>();
             services.AddScoped<ITaskExecutionService, TaskExecutionService>();
             services.AddScoped<ISiteCollectorManager, SiteCollectorManager>();
+            services.AddScoped<CollectionEngineService>();
+
+            // 注册HttpClient
+            services.AddHttpClient();
 
             return services;
         }
