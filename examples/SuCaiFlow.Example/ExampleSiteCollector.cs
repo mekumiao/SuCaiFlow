@@ -1,5 +1,4 @@
 using SuCaiFlow.Contracts.Entities;
-using SuCaiFlow.Contracts.Interfaces;
 using SuCaiFlow.Core.Services;
 
 namespace SuCaiFlow.Example;
@@ -11,7 +10,7 @@ public class ExampleSiteCollector : BaseSiteCollector {
     public override string SiteIdentifier => "example.com";
     public override string DisplayName => "示例站点采集器";
 
-    public override async Task<List<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config = null) {
+    public override async Task<IEnumerable<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config = null) {
         // 模拟解析页面，返回一些示例URL
         await Task.Delay(100); // 模拟网络请求延迟
 

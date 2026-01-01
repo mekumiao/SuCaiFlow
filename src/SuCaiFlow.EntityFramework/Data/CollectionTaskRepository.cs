@@ -53,7 +53,7 @@ public class CollectionTaskRepository(SuCaiFlowDbContext context) : ICollectionT
             .FirstOrDefaultAsync(t => t.Status == status);
     }
 
-    public async Task<List<CollectionTask>> GetByStatusListAsync(List<CollectionTaskStatus> statuses) {
+    public async Task<IEnumerable<CollectionTask>> GetByStatusListAsync(List<CollectionTaskStatus> statuses) {
         var dbSet = _context.CollectionTasks;
         return await dbSet
             .Include(t => t.Assets)

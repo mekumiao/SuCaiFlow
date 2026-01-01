@@ -31,7 +31,8 @@ public class CollectionTaskService(
         await _collectionTaskRepository.AddAsync(collectionTask);
         await _collectionTaskRepository.SaveChangesAsync();
 
-        _logger.LogInformation("Created collection task with ID: {TaskId}", collectionTask.Id);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Created collection task with ID: {TaskId}", collectionTask.Id);
 
         return collectionTask.Id;
     }
@@ -40,21 +41,22 @@ public class CollectionTaskService(
         return await _collectionTaskRepository.GetByIdAsync(taskId);
     }
 
-    public async Task<List<CollectionTask>> GetAllCollectionTasksAsync() {
-        var tasks = await _collectionTaskRepository.GetAllAsync();
-        return tasks.ToList();
+    public async Task<IEnumerable<CollectionTask>> GetAllCollectionTasksAsync() {
+        return await _collectionTaskRepository.GetAllAsync();
     }
 
     public async Task<bool> StartCollectionTaskAsync(Guid taskId) {
         var task = await _collectionTaskRepository.GetByIdAsync(taskId);
         if (task == null) {
-            _logger.LogWarning("Attempted to start non-existent task with ID: {TaskId}", taskId);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning("Attempted to start non-existent task with ID: {TaskId}", taskId);
             return false;
         }
 
         // 检查任务是否已经在运行
         if (await _taskExecutionService.IsTaskRunningAsync(taskId)) {
-            _logger.LogWarning("Task with ID: {TaskId} is already running", taskId);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning("Task with ID: {TaskId} is already running", taskId);
             return false;
         }
 
@@ -67,7 +69,8 @@ public class CollectionTaskService(
         // 标记任务为正在运行
         await _taskExecutionService.MarkTaskAsRunningAsync(taskId);
 
-        _logger.LogInformation("Started collection task with ID: {TaskId}", taskId);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Started collection task with ID: {TaskId}", taskId);
 
         return true;
     }
@@ -87,7 +90,8 @@ public class CollectionTaskService(
         await _collectionTaskRepository.UpdateAsync(task);
         await _collectionTaskRepository.SaveChangesAsync();
 
-        _logger.LogInformation("Cancelled collection task with ID: {TaskId}", taskId);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Cancelled collection task with ID: {TaskId}", taskId);
 
         return true;
     }
@@ -104,7 +108,8 @@ public class CollectionTaskService(
         var result = await _collectionTaskRepository.DeleteAsync(taskId);
         if (result) {
             await _collectionTaskRepository.SaveChangesAsync();
-            _logger.LogInformation("Deleted collection task with ID: {TaskId}", taskId);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Deleted collection task with ID: {TaskId}", taskId);
         }
 
         return result;
@@ -113,7 +118,8 @@ public class CollectionTaskService(
     public async Task<bool> UpdateTaskProgressAsync(Guid taskId, int assetsCollected, int totalExpected) {
         var task = await _collectionTaskRepository.GetByIdAsync(taskId);
         if (task == null) {
-            _logger.LogWarning("Attempted to update progress for non-existent task with ID: {TaskId}", taskId);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning("Attempted to update progress for non-existent task with ID: {TaskId}", taskId);
             return false;
         }
 
@@ -123,7 +129,8 @@ public class CollectionTaskService(
         await _collectionTaskRepository.UpdateAsync(task);
         await _collectionTaskRepository.SaveChangesAsync();
 
-        _logger.LogInformation("Updated progress for task {TaskId}: {AssetsCollected}/{TotalExpected}", taskId, assetsCollected, totalExpected);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Updated progress for task {TaskId}: {AssetsCollected}/{TotalExpected}", taskId, assetsCollected, totalExpected);
 
         return true;
     }

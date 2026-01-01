@@ -1,10 +1,8 @@
-// 导入必要的命名空间
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using SuCaiFlow.Contracts.Entities;
 using SuCaiFlow.Contracts.Interfaces;
 using SuCaiFlow.Core.Extensions;
 using SuCaiFlow.EntityFramework.Data;
@@ -49,15 +47,17 @@ var taskId = await collectionTaskService.CreateCollectionTaskAsync(
     ".item",
     new Dictionary<string, string> { { "key", "value" } });
 
-logger.LogInformation("创建采集任务，ID: {TaskId}", taskId);
+if (logger.IsEnabled(LogLevel.Information))
+    logger.LogInformation("创建采集任务，ID: {TaskId}", taskId);
 
 // 检查任务执行状态
 var isRunning = await taskExecutionService.IsTaskRunningAsync(taskId);
-logger.LogInformation("任务运行状态: {IsRunning}", isRunning);
+if (logger.IsEnabled(LogLevel.Information))
+    logger.LogInformation("任务运行状态: {IsRunning}", isRunning);
 
 // 获取任务信息
 var task = await collectionTaskService.GetCollectionTaskByIdAsync(taskId);
-if (task != null) {
+if (task != null && logger.IsEnabled(LogLevel.Information)) {
     logger.LogInformation("任务名称: {TaskName}, 状态: {Status}", task.Name, task.Status);
 }
 
@@ -68,12 +68,14 @@ if (started) {
 
     // 再次检查任务执行状态
     isRunning = await taskExecutionService.IsTaskRunningAsync(taskId);
-    logger.LogInformation("任务运行状态: {IsRunning}", isRunning);
+    if (logger.IsEnabled(LogLevel.Information))
+        logger.LogInformation("任务运行状态: {IsRunning}", isRunning);
 }
 
 // 获取所有任务
 var allTasks = await collectionTaskService.GetAllCollectionTasksAsync();
-logger.LogInformation("共有 {Count} 个任务", allTasks.Count);
+if (logger.IsEnabled(LogLevel.Information))
+    logger.LogInformation("共有 {Count} 个任务", allTasks.Count());
 
 // 演示事件发布功能
 await eventPublisher.PublishAsync(new SuCaiFlow.Contracts.Events.CollectionTaskStartedEvent {
@@ -83,27 +85,31 @@ await eventPublisher.PublishAsync(new SuCaiFlow.Contracts.Events.CollectionTaskS
 });
 
 logger.LogInformation("演示站点采集器管理器功能...");
-logger.LogInformation("当前注册的采集器数量: {Count}", siteCollectorManager.GetAllCollectors().Count);
+if (logger.IsEnabled(LogLevel.Information))
+    logger.LogInformation("当前注册的采集器数量: {Count}", siteCollectorManager.GetAllCollectors().Count());
 
 // 注册示例采集器
 var exampleCollector = new ExampleSiteCollector();
 siteCollectorManager.RegisterCollector(exampleCollector);
 
-logger.LogInformation("注册示例采集器后，当前采集器数量: {Count}", siteCollectorManager.GetAllCollectors().Count);
+if (logger.IsEnabled(LogLevel.Information))
+    logger.LogInformation("注册示例采集器后，当前采集器数量: {Count}", siteCollectorManager.GetAllCollectors().Count());
 
 // 尝试获取采集器
 var collector = siteCollectorManager.GetCollectorForUrl("https://example.com/page");
 if (collector != null) {
-    logger.LogInformation("找到采集器: {DisplayName} ({SiteIdentifier})", collector.DisplayName, collector.SiteIdentifier);
+    if (logger.IsEnabled(LogLevel.Information))
+        logger.LogInformation("找到采集器: {DisplayName} ({SiteIdentifier})", collector.DisplayName, collector.SiteIdentifier);
 
     // 尝试解析页面
     var urls = await collector.ParsePageAsync(task!, "https://example.com/page", null);
-    logger.LogInformation("从页面解析到 {Count} 个URL", urls.Count);
+    if (logger.IsEnabled(LogLevel.Information))
+        logger.LogInformation("从页面解析到 {Count} 个URL", urls.Count());
 
     foreach (var url in urls.Take(2)) // 只下载前两个资源以节省时间
     {
         var asset = await collector.DownloadAssetAsync(url);
-        if (asset != null) {
+        if (asset != null && logger.IsEnabled(LogLevel.Information)) {
             logger.LogInformation("下载资源成功: {Url} -> {LocalPath}", asset.Url, asset.LocalPath);
         }
     }

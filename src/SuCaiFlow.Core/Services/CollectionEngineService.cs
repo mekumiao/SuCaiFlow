@@ -43,12 +43,14 @@ public partial class CollectionEngineService(
 
             var task = await _collectionTaskRepository.GetByIdAsync(taskId);
             if (task == null) {
-                _logger.LogError("Collection task with ID {TaskId} not found", taskId);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError("Collection task with ID {TaskId} not found", taskId);
                 await _taskExecutionService.MarkTaskAsFailedAsync(taskId);
                 return;
             }
 
-            _logger.LogInformation("Starting collection task {TaskId} for URL: {Url}", taskId, task.Url);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Starting collection task {TaskId} for URL: {Url}", taskId, task.Url);
 
             // 发布任务开始事件
             await _eventPublisher.PublishAsync(new Contracts.Events.CollectionTaskStartedEvent {
@@ -99,10 +101,12 @@ public partial class CollectionEngineService(
                 Status = task.Status
             });
 
-            _logger.LogInformation("Completed collection task {TaskId}, collected {AssetCount} assets", taskId, assets.Count);
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("Completed collection task {TaskId}, collected {AssetCount} assets", taskId, assets.Count);
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error processing collection task {TaskId}", taskId);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error processing collection task {TaskId}", taskId);
 
             // 更新任务状态为失败
             var task = await _collectionTaskRepository.GetByIdAsync(taskId);
@@ -140,7 +144,8 @@ public partial class CollectionEngineService(
             await Task.WhenAll(parsingTask, downloadingTask);
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error executing parallel collection for task {TaskId}", task.Id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error executing parallel collection for task {TaskId}", task.Id);
             throw;
         }
 
@@ -209,7 +214,7 @@ public partial class CollectionEngineService(
                 }
 
                 var nextPageUrls = await ParsePageAsync(task, nextPageUrl, config);
-                if (nextPageUrls.Count == 0) {
+                if (!nextPageUrls.Any()) {
                     break; // 没有更多内容，停止翻页
                 }
 
@@ -250,7 +255,8 @@ public partial class CollectionEngineService(
             await _collectionTaskRepository.SaveChangesAsync();
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error parsing pages for task {TaskId}", task.Id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error parsing pages for task {TaskId}", task.Id);
             throw;
         }
         finally {
@@ -262,19 +268,21 @@ public partial class CollectionEngineService(
     /// <summary>
     /// 解析单个页面获取资源URL
     /// </summary>
-    private async Task<List<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config = null) {
+    private async Task<IEnumerable<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config = null) {
         try {
             // 获取适合当前URL的站点采集器
             var siteCollector = _siteCollectorManager.GetCollectorForUrl(pageUrl);
             if (siteCollector == null) {
-                _logger.LogWarning("No site collector found for URL: {PageUrl}", pageUrl);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                    _logger.LogWarning("No site collector found for URL: {PageUrl}", pageUrl);
                 return [];
             }
 
             return await siteCollector.ParsePageAsync(task, pageUrl, config);
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error parsing page {PageUrl} for task {TaskId}", pageUrl, task.Id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error parsing page {PageUrl} for task {TaskId}", pageUrl, task.Id);
             return [];
         }
     }
@@ -361,7 +369,8 @@ public partial class CollectionEngineService(
             await UpdatePendingProgressInDatabaseAsync(task.Id);
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error executing collection for task {TaskId}", task.Id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error executing collection for task {TaskId}", task.Id);
             throw;
         }
 
@@ -560,7 +569,8 @@ public partial class CollectionEngineService(
                 }
             }
             catch (Exception ex) {
-                _logger.LogError(ex, "Error updating progress for task {TaskId}", taskId);
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Error updating progress for task {TaskId}", taskId);
             }
             finally {
                 _dbUpdateSemaphore.Release();
@@ -591,7 +601,8 @@ public partial class CollectionEngineService(
             }
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error updating progress for task {TaskId}", task.Id);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error updating progress for task {TaskId}", task.Id);
         }
         finally {
             _dbUpdateSemaphore.Release();
@@ -612,11 +623,13 @@ public partial class CollectionEngineService(
                 return await genericCollector.DownloadAssetAsync(url, config);
             }
 
-            _logger.LogWarning("No site collector found for URL: {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning("No site collector found for URL: {Url}", url);
             return null;
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error downloading asset from {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error downloading asset from {Url}", url);
             return null;
         }
     }
@@ -639,7 +652,8 @@ public partial class CollectionEngineService(
             return url;
         }
         catch (Exception ex) {
-            _logger.LogError(ex, "Error preprocessing asset URL: {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Error))
+                _logger.LogError(ex, "Error preprocessing asset URL: {Url}", url);
             return url; // 返回原始URL作为后备
         }
     }

@@ -1,5 +1,5 @@
+#pragma warning disable IDE0053 // 使用表达式主体来表示 Lambda 表达式
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using SuCaiFlow.Contracts.Entities;
@@ -47,7 +47,7 @@ public class SuCaiFlowDbContext(DbContextOptions<SuCaiFlowDbContext> options) : 
 
         // 配置 CollectionTask 和 CollectionTaskConfig 的关系
         modelBuilder.Entity<CollectionTask>(entity => {
-            entity.HasOne<CollectionTaskConfig>(e => e.Config)
+            entity.HasOne(e => e.Config)
                   .WithMany()
                   .HasForeignKey(e => e.ConfigId)
                   .OnDelete(DeleteBehavior.SetNull);
