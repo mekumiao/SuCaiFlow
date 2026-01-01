@@ -4,4 +4,30 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackagePrefix>Mekumiao</PackagePrefix>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>mekumiao</Authors>
+    <Company>mekumiao</Company>
+    <Product>SuCaiFlow</Product>
+    <Description>A powerful asset collection framework for .NET applications.</Description>
+    <Copyright>Copyright (c) $(Company) $(Year)</Copyright>
+    <PackageTags>asset-collection;web-scraping;data-collection;framework</PackageTags>
+    <PackageProjectUrl>https://github.com/mekumiao/SuCaiFlow</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mekumiao/SuCaiFlow</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <PackageOutputPath>../../nuget</PackageOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 </Project>
