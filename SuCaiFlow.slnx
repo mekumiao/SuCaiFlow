@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/examples/">
+    <Project Path="examples/SuCaiFlow.Example/SuCaiFlow.Example.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SuCaiFlow.Contracts/SuCaiFlow.Contracts.csproj" />
+    <Project Path="src/SuCaiFlow.Core/SuCaiFlow.Core.csproj" />
+    <Project Path="src/SuCaiFlow.EntityFramework/SuCaiFlow.EntityFramework.csproj" />
+  </Folder>
+</Solution>
