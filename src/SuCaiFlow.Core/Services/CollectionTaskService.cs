@@ -9,15 +9,18 @@ namespace SuCaiFlow.Core.Services
     {
         private readonly ICollectionTaskRepository _collectionTaskRepository;
         private readonly IAssetRepository _assetRepository;
+        private readonly ITaskExecutionService _taskExecutionService;
         private readonly ILogger<CollectionTaskService> _logger;
 
         public CollectionTaskService(
             ICollectionTaskRepository collectionTaskRepository, 
             IAssetRepository assetRepository,
+            ITaskExecutionService taskExecutionService,
             ILogger<CollectionTaskService> logger)
         {
             _collectionTaskRepository = collectionTaskRepository;
             _assetRepository = assetRepository;
+            _taskExecutionService = taskExecutionService;
             _logger = logger;
         }
 
@@ -64,11 +67,21 @@ namespace SuCaiFlow.Core.Services
                 return false;
             }
 
+            // 检查任务是否已经在运行
+            if (await _taskExecutionService.IsTaskRunningAsync(taskId))
+            {
+                _logger.LogWarning("Task with ID: {TaskId} is already running", taskId);
+                return false;
+            }
+
             // 更新任务状态为进行中
             task.Status = CollectionTaskStatus.InProgress;
             task.StartedAt = DateTime.UtcNow;
             await _collectionTaskRepository.UpdateAsync(task);
             await _collectionTaskRepository.SaveChangesAsync();
+
+            // 标记任务为正在运行
+            await _taskExecutionService.MarkTaskAsRunningAsync(taskId);
 
             _logger.LogInformation("Started collection task with ID: {TaskId}", taskId);
 
@@ -81,6 +94,12 @@ namespace SuCaiFlow.Core.Services
             if (task == null)
             {
                 return false;
+            }
+
+            if (task.Status == CollectionTaskStatus.InProgress)
+            {
+                // 如果任务正在运行，需要先标记为完成
+                await _taskExecutionService.MarkTaskAsCompletedAsync(taskId);
             }
 
             task.Status = CollectionTaskStatus.Cancelled;

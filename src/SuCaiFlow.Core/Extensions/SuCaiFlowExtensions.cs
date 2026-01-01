@@ -12,6 +12,9 @@ namespace SuCaiFlow.Core.Extensions
             // 注册服务
             services.AddScoped<ICollectionTaskService, CollectionTaskService>();
             services.AddScoped<IAssetService, AssetService>();
+            services.AddScoped<IEventPublisher, EventPublisher>();
+            services.AddScoped<ITaskExecutionService, TaskExecutionService>();
+            services.AddScoped<ISiteCollectorManager, SiteCollectorManager>();
 
             return services;
         }
@@ -24,6 +27,9 @@ namespace SuCaiFlow.Core.Extensions
             // 注册服务
             services.AddScoped<ICollectionTaskService, CollectionTaskService>();
             services.AddScoped<IAssetService, AssetService>();
+            services.AddScoped<IEventPublisher, EventPublisher>();
+            services.AddScoped<ITaskExecutionService, TaskExecutionService>();
+            services.AddScoped<ISiteCollectorManager, SiteCollectorManager>();
 
             return services;
         }
