@@ -32,31 +32,48 @@ builder.Services.AddDbContext<SuCaiFlowDbContext>(options =>
 ## Extension Methods
 
 ### AddSuCaiFlowEntityFrameworkCore()
+
 Initializes SuCaiFlow Entity Framework Core integration.
 
 ### UseEntityFrameworkCore()
+
 Configures SuCaiFlow to use Entity Framework Core as the backing store.
 
 ### UseDbContext<TContext>()
+
 Specifies the DbContext type to use with SuCaiFlow.
 
 ### UseSuCaiFlow()
+
 Configures Entity Framework Core to work with SuCaiFlow entities.
 
 ### AddSuCaiFlowEntityFrameworkStores()
+
 Registers the SuCaiFlow repositories.
+
+## Entity Configuration Pattern
+
+SuCaiFlow now uses the `IEntityTypeConfiguration<T>` interface to define entity mappings, following EF Core best practices:
+
+- `CollectionTaskConfiguration` - Configures the CollectionTask entity
+- `CollectionTaskConfigConfiguration` - Configures the CollectionTaskConfig entity  
+- `CollectedAssetConfiguration` - Configures the CollectedAsset entity
+
+This approach allows the library to be used with any DbContext implementation without being tied to a specific one.
 
 ## Migration from Previous Versions
 
 If you were using the old configuration:
 
 **Before:**
+
 ```csharp
 services.AddSuCaiFlowDbContext<SuCaiFlowDbContext>(connectionString); // Hardcoded to PostgreSQL
 services.AddSuCaiFlowRepositories();
 ```
 
 **After:**
+
 ```csharp
 services.AddSuCaiFlow()
     .UseEntityFrameworkCore()
