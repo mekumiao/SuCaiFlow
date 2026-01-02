@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SuCaiFlow.Contracts.Interfaces;
 using SuCaiFlow.Core.Services;
@@ -8,12 +9,12 @@ namespace SuCaiFlow.Core.Extensions;
 public static class SuCaiFlowExtensions {
     public static IServiceCollection AddSuCaiFlow(this IServiceCollection services) {
         // 注册服务
-        services.AddScoped<ICollectionTaskService, CollectionTaskService>();
-        services.AddScoped<IAssetService, AssetService>();
-        services.AddScoped<IEventPublisher, EventPublisher>();
-        services.AddScoped<ITaskExecutionService, TaskExecutionService>();
-        services.AddScoped<ISiteCollectorManager, SiteCollectorManager>();
-        services.AddScoped<CollectionEngineService>();
+        services.TryAddScoped<ICollectionTaskService, CollectionTaskService>();
+        services.TryAddScoped<IAssetService, AssetService>();
+        services.TryAddScoped<IEventPublisher, EventPublisher>();
+        services.TryAddScoped<ITaskExecutionService, TaskExecutionService>();
+        services.TryAddScoped<ISiteCollectorManager, SiteCollectorManager>();
+        services.TryAddScoped<CollectionEngineService>();
 
         // 注册HttpClient
         //services.AddHttpClient();
@@ -26,12 +27,12 @@ public static class SuCaiFlowExtensions {
         configureOptions(options);
 
         // 注册服务
-        services.AddScoped<ICollectionTaskService, CollectionTaskService>();
-        services.AddScoped<IAssetService, AssetService>();
-        services.AddScoped<IEventPublisher, EventPublisher>();
-        services.AddScoped<ITaskExecutionService, TaskExecutionService>();
-        services.AddScoped<ISiteCollectorManager, SiteCollectorManager>();
-        services.AddScoped<CollectionEngineService>();
+        services.TryAddScoped<ICollectionTaskService, CollectionTaskService>();
+        services.TryAddScoped<IAssetService, AssetService>();
+        services.TryAddScoped<IEventPublisher, EventPublisher>();
+        services.TryAddScoped<ITaskExecutionService, TaskExecutionService>();
+        services.TryAddScoped<ISiteCollectorManager, SiteCollectorManager>();
+        services.TryAddScoped<CollectionEngineService>();
 
         // 注册HttpClient
         //services.AddHttpClient();

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using SuCaiFlow.Contracts.Interfaces;
 using SuCaiFlow.EntityFramework.Data;
@@ -20,9 +21,9 @@ public static class EntityFrameworkExtensions {
     }
 
     public static IServiceCollection AddSuCaiFlowRepositories(this IServiceCollection services) {
-        services.AddScoped<ICollectionTaskRepository, CollectionTaskRepository>();
-        services.AddScoped<IAssetRepository, AssetRepository>();
-        services.AddScoped<ICollectionTaskConfigRepository, CollectionTaskConfigRepository>();
+        services.TryAddScoped<ICollectionTaskRepository, CollectionTaskRepository>();
+        services.TryAddScoped<IAssetRepository, AssetRepository>();
+        services.TryAddScoped<ICollectionTaskConfigRepository, CollectionTaskConfigRepository>();
         return services;
     }
 }
