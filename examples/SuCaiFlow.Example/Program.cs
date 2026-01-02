@@ -15,14 +15,17 @@ var builder = Host.CreateApplicationBuilder(args);
 // 配置日志
 builder.Logging.AddConsole();
 
-// 添加SuCaiFlow服务
+// 添加SuCaiFlow核心服务
 builder.Services.AddSuCaiFlow();
 
-// 添加SuCaiFlow数据库上下文和仓储
-builder.Services.AddSuCaiFlowDbContext<SuCaiFlowDbContext>(options =>
-    options.UseInMemoryDatabase("SuCaiFlowDemo"));
+// 添加SuCaiFlow EFCore服务
+builder.Services.AddSuCaiFlowEntityFrameworkCore()
+    .UseEntityFrameworkCore()
+    .UseDbContext<SuCaiFlowDbContext>();
 
-builder.Services.AddSuCaiFlowRepositories();
+// 配置DbContext
+builder.Services.AddDbContext<SuCaiFlowDbContext>(options =>
+    options.UseInMemoryDatabase("SuCaiFlowDemo").UseSuCaiFlow());
 
 // 注册示例站点采集器
 builder.Services.AddScoped<ISiteCollector, ExampleSiteCollector>();
