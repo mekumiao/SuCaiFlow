@@ -7,16 +7,16 @@
   <Folder Name="/examples/">
     <Project Path="examples/SuCaiFlow.Example/SuCaiFlow.Example.csproj" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/SuCaiFlow.Contracts/SuCaiFlow.Contracts.csproj" />
-    <Project Path="src/SuCaiFlow.Core/SuCaiFlow.Core.csproj" />
-    <Project Path="src/SuCaiFlow.EntityFramework/SuCaiFlow.EntityFramework.csproj" />
-  </Folder>
-  <Folder Name="/items/">
+  <Folder Name="/root/">
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SuCaiFlow.Contracts/SuCaiFlow.Contracts.csproj" />
+    <Project Path="src/SuCaiFlow.Core/SuCaiFlow.Core.csproj" />
+    <Project Path="src/SuCaiFlow.EntityFramework/SuCaiFlow.EntityFrameworkCore.csproj" />
   </Folder>
 </Solution>

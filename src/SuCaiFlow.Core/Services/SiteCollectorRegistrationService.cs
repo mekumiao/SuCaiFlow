@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using SuCaiFlow.Contracts.Interfaces;
+using SuCaiFlow.Contracts.Services;
 
 namespace SuCaiFlow.Core.Services;
 

@@ -1,36 +1,41 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace SuCaiFlow.Contracts.Entities;
 
 public class CollectionTaskConfig {
-    public Guid Id { get; set; }
+    public virtual Guid Id { get; set; }
 
-    [Required]
-    public string Name { get; set; } = string.Empty;
+    public virtual string? Name { get; set; }
 
-    public string Description { get; set; } = string.Empty;
+    public virtual string? Description { get; set; }
 
-    public string Selector { get; set; } = string.Empty;
+    public virtual string? Selector { get; set; }
 
-    public string? SiteUrl { get; set; }
+    public virtual string? SiteUrl { get; set; }
 
-    public string? PaginationSelector { get; set; }
+    public virtual string? PaginationSelector { get; set; }
 
-    public int MaxParseItems { get; set; } = 100;
+    public virtual int MaxParseItems { get; set; }
 
-    public int RequestDelayMs { get; set; } = 500;
+    public virtual int RequestDelayMs { get; set; }
 
-    public bool EnableAutoPagination { get; set; } = true;
+    public virtual bool EnableAutoPagination { get; set; }
 
-    public string? NextPagePattern { get; set; }
+    public virtual string? NextPagePattern { get; set; }
 
-    public Dictionary<string, string> AdditionalSettings { get; set; } = [];
+    public virtual Dictionary<string, string>? AdditionalSettings { get; set; }
 
-    public Dictionary<string, string> RequestHeaders { get; set; } = [];
+    public virtual Dictionary<string, string>? RequestHeaders { get; set; }
 
-    public Dictionary<string, string> SearchParameters { get; set; } = [];
+    public virtual Dictionary<string, string>? SearchParameters { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public virtual DateTime? CreatedAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public virtual DateTime? UpdatedAt { get; set; }
+}
+
+public enum CollectionTaskStatus {
+    Pending = 0,
+    InProgress = 1,
+    Completed = 2,
+    Failed = 3,
+    Cancelled = 4
 }

@@ -1,5 +1,5 @@
 using SuCaiFlow.Contracts.Entities;
-using SuCaiFlow.Contracts.Interfaces;
+using SuCaiFlow.Contracts.Services;
 
 namespace SuCaiFlow.Core.Services;
 
@@ -15,7 +15,7 @@ public abstract class BaseSiteCollector : ISiteCollector {
         return url.Contains(SiteIdentifier, StringComparison.OrdinalIgnoreCase);
     }
 
-    public abstract Task<IEnumerable<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config = null);
+    public abstract Task<IEnumerable<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config, CancellationToken cancellationToken);
 
     public virtual string ConstructNextPageUrlByPattern(string baseUrl, int pageNumber, string pattern) {
         // 根据模式替换页码
@@ -34,7 +34,7 @@ public abstract class BaseSiteCollector : ISiteCollector {
         return "img[src], a[href]";
     }
 
-    public abstract Task<CollectedAsset?> DownloadAssetAsync(string url, CollectionTaskConfig? config = null);
+    public abstract Task<CollectedAsset?> DownloadAssetAsync(string url, CollectionTaskConfig? config, CancellationToken cancellationToken);
 
     public virtual string PreprocessAssetUrl(string url, CollectionTaskConfig? config = null) {
         // 默认实现：直接返回URL

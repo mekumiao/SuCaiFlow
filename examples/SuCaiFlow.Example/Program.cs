@@ -3,27 +3,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using SuCaiFlow.Contracts.Interfaces;
-using SuCaiFlow.Core.Extensions;
-using SuCaiFlow.EntityFramework.Data;
-using SuCaiFlow.EntityFramework.Extensions;
+using SuCaiFlow.Contracts.Services;
+using SuCaiFlow.Core;
 using SuCaiFlow.Example;
 
-// 创建主机构建器
 var builder = Host.CreateApplicationBuilder(args);
 
-// 配置日志
 builder.Logging.AddConsole();
 
-// 添加SuCaiFlow核心服务
-builder.Services.AddSuCaiFlow();
+builder.Services.AddSuCaiFlow()
+                .AddCore(options => options
+                .UseEntityFrameworkCore()
+                .UseDbContext<SuCaiFlowDbContext>());
 
-// 添加SuCaiFlow EFCore服务
-builder.Services.AddSuCaiFlowEntityFrameworkCore()
-    .UseEntityFrameworkCore()
-    .UseDbContext<SuCaiFlowDbContext>();
-
-// 配置DbContext
 builder.Services.AddDbContext<SuCaiFlowDbContext>(options =>
     options.UseInMemoryDatabase("SuCaiFlowDemo").UseSuCaiFlow());
 
@@ -42,41 +34,45 @@ var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 logger.LogInformation("开始演示SuCaiFlow功能...");
 
+var tokenSource = new CancellationTokenSource();
+
 // 创建一个采集任务
 var taskId = await collectionTaskService.CreateCollectionTaskAsync(
     "示例任务",
     "这是一个示例采集任务",
     "https://example.com",
     ".item",
-    new Dictionary<string, string> { { "key", "value" } });
+    new Dictionary<string, string> { { "key", "value" } },
+    5,
+    tokenSource.Token);
 
 if (logger.IsEnabled(LogLevel.Information))
     logger.LogInformation("创建采集任务，ID: {TaskId}", taskId);
 
 // 检查任务执行状态
-var isRunning = await taskExecutionService.IsTaskRunningAsync(taskId);
+var isRunning = await taskExecutionService.IsTaskRunningAsync(taskId, tokenSource.Token);
 if (logger.IsEnabled(LogLevel.Information))
     logger.LogInformation("任务运行状态: {IsRunning}", isRunning);
 
 // 获取任务信息
-var task = await collectionTaskService.GetCollectionTaskByIdAsync(taskId);
+var task = await collectionTaskService.GetCollectionTaskByIdAsync(taskId, tokenSource.Token);
 if (task != null && logger.IsEnabled(LogLevel.Information)) {
     logger.LogInformation("任务名称: {TaskName}, 状态: {Status}", task.Name, task.Status);
 }
 
 // 启动任务
-var started = await collectionTaskService.StartCollectionTaskAsync(taskId);
+var started = await collectionTaskService.StartCollectionTaskAsync(taskId, tokenSource.Token);
 if (started) {
     logger.LogInformation("成功启动任务");
 
     // 再次检查任务执行状态
-    isRunning = await taskExecutionService.IsTaskRunningAsync(taskId);
+    isRunning = await taskExecutionService.IsTaskRunningAsync(taskId, tokenSource.Token);
     if (logger.IsEnabled(LogLevel.Information))
         logger.LogInformation("任务运行状态: {IsRunning}", isRunning);
 }
 
 // 获取所有任务
-var allTasks = await collectionTaskService.GetAllCollectionTasksAsync();
+var allTasks = await collectionTaskService.GetAllCollectionTasksAsync(tokenSource.Token);
 if (logger.IsEnabled(LogLevel.Information))
     logger.LogInformation("共有 {Count} 个任务", allTasks.Count());
 
@@ -85,7 +81,7 @@ await eventPublisher.PublishAsync(new SuCaiFlow.Contracts.Events.CollectionTaskS
     TaskId = taskId,
     TaskName = "示例任务",
     Timestamp = DateTime.UtcNow
-});
+}, tokenSource.Token);
 
 logger.LogInformation("演示站点采集器管理器功能...");
 if (logger.IsEnabled(LogLevel.Information))
@@ -105,13 +101,13 @@ if (collector != null) {
         logger.LogInformation("找到采集器: {DisplayName} ({SiteIdentifier})", collector.DisplayName, collector.SiteIdentifier);
 
     // 尝试解析页面
-    var urls = await collector.ParsePageAsync(task!, "https://example.com/page", null);
+    var urls = await collector.ParsePageAsync(task!, "https://example.com/page", null, tokenSource.Token);
     if (logger.IsEnabled(LogLevel.Information))
         logger.LogInformation("从页面解析到 {Count} 个URL", urls.Count());
 
     foreach (var url in urls.Take(2)) // 只下载前两个资源以节省时间
     {
-        var asset = await collector.DownloadAssetAsync(url);
+        var asset = await collector.DownloadAssetAsync(url, null, tokenSource.Token);
         if (asset != null && logger.IsEnabled(LogLevel.Information)) {
             logger.LogInformation("下载资源成功: {Url} -> {LocalPath}", asset.Url, asset.LocalPath);
         }

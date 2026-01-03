@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-using SuCaiFlow.Contracts.Interfaces;
+using SuCaiFlow.Contracts.Services;
 
 namespace SuCaiFlow.Core.Services;
 
@@ -10,7 +10,7 @@ namespace SuCaiFlow.Core.Services;
 public class EventPublisher(ILogger<EventPublisher> logger) : IEventPublisher {
     private readonly ILogger<EventPublisher> _logger = logger;
 
-    public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class {
+    public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken) where TEvent : class {
         if (_logger.IsEnabled(LogLevel.Information))
             _logger.LogInformation("发布事件: {EventType}", typeof(TEvent).Name);
 

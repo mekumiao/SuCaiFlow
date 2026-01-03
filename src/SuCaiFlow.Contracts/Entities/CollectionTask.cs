@@ -1,41 +1,41 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace SuCaiFlow.Contracts.Entities;
 
 public class CollectionTask {
-    public Guid Id { get; set; }
+    public virtual Guid Id { get; set; }
 
-    [Required]
-    public string Name { get; set; } = string.Empty;
+    public virtual string? Name { get; set; }
 
-    public string Description { get; set; } = string.Empty;
+    public virtual string? Description { get; set; }
 
-    [Required]
-    public string Url { get; set; } = string.Empty;
+    public virtual string? Url { get; set; }
 
-    public string Selector { get; set; } = string.Empty;
+    public virtual string? Selector { get; set; }
 
-    public CollectionTaskStatus Status { get; set; } = CollectionTaskStatus.Pending;
+    public virtual CollectionTaskStatus Status { get; set; } = CollectionTaskStatus.Pending;
 
-    public DateTime CreatedAt { get; set; }
+    public virtual DateTime? CreatedAt { get; set; }
 
-    public DateTime? StartedAt { get; set; }
+    public virtual DateTime? StartedAt { get; set; }
 
-    public DateTime? CompletedAt { get; set; }
+    public virtual DateTime? CompletedAt { get; set; }
 
-    public int MaxConcurrency { get; set; } = 5;
+    public virtual int MaxConcurrency { get; set; }
 
-    public int AssetsCollectedCount { get; set; } = 0;
+    public virtual int AssetsCollectedCount { get; set; }
 
-    public int TotalAssetsExpected { get; set; } = 0;
+    public virtual int TotalAssetsExpected { get; set; }
 
-    public string? ErrorMessage { get; set; }
+    public virtual string? ErrorMessage { get; set; }
 
-    public Dictionary<string, string> Parameters { get; set; } = [];
+    public virtual Dictionary<string, string>? Parameters { get; set; }
 
-    public Guid? ConfigId { get; set; }
+    public virtual Guid? ConfigId { get; set; }
 
-    public CollectionTaskConfig? Config { get; set; }
+    public virtual CollectionTaskConfig? Config { get; set; }
 
-    public List<CollectedAsset> Assets { get; set; } = [];
+    public virtual ICollection<CollectedAsset> Assets { get; private set; } = new HashSet<CollectedAsset>();
+
+    public virtual void SetNewAssets(ICollection<CollectedAsset> assets) {
+        Assets = assets;
+    }
 }

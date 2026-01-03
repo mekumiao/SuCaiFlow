@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-using SuCaiFlow.Contracts.Interfaces;
+using SuCaiFlow.Contracts.Services;
 
 namespace SuCaiFlow.Core.Services;
 
@@ -11,14 +11,14 @@ public class TaskExecutionService(ILogger<TaskExecutionService> logger) : ITaskE
     private readonly ILogger<TaskExecutionService> _logger = logger;
     private readonly HashSet<Guid> _runningTasks = [];
 
-    public async Task<bool> IsTaskRunningAsync(Guid taskId) {
+    public async Task<bool> IsTaskRunningAsync(Guid taskId, CancellationToken cancellationToken) {
         var isRunning = _runningTasks.Contains(taskId);
         if (_logger.IsEnabled(LogLevel.Debug))
             _logger.LogDebug("检查任务 {TaskId} 运行状态: {IsRunning}", taskId, isRunning);
         return isRunning;
     }
 
-    public async Task<bool> MarkTaskAsRunningAsync(Guid taskId) {
+    public async Task<bool> MarkTaskAsRunningAsync(Guid taskId, CancellationToken cancellationToken) {
         if (_runningTasks.Add(taskId)) {
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("标记任务 {TaskId} 为运行状态", taskId);
@@ -29,7 +29,7 @@ public class TaskExecutionService(ILogger<TaskExecutionService> logger) : ITaskE
         return false;
     }
 
-    public async Task<bool> MarkTaskAsCompletedAsync(Guid taskId) {
+    public async Task<bool> MarkTaskAsCompletedAsync(Guid taskId, CancellationToken cancellationToken) {
         if (_runningTasks.Remove(taskId)) {
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("标记任务 {TaskId} 为完成状态", taskId);
@@ -40,7 +40,7 @@ public class TaskExecutionService(ILogger<TaskExecutionService> logger) : ITaskE
         return false;
     }
 
-    public async Task<bool> MarkTaskAsFailedAsync(Guid taskId) {
+    public async Task<bool> MarkTaskAsFailedAsync(Guid taskId, CancellationToken cancellationToken) {
         if (_runningTasks.Remove(taskId)) {
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("标记任务 {TaskId} 为失败状态", taskId);

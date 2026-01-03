@@ -4,13 +4,15 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 using SuCaiFlow.Contracts.Entities;
-using SuCaiFlow.Contracts.Interfaces;
+using SuCaiFlow.Contracts.Events;
+using SuCaiFlow.Contracts.Repositories;
+using SuCaiFlow.Contracts.Services;
 
 namespace SuCaiFlow.Core.Services;
 
 public partial class CollectionEngineService(
     ICollectionTaskRepository collectionTaskRepository,
-    IAssetRepository assetRepository,
+    ICollectedAssetRepository assetRepository,
     ITaskExecutionService taskExecutionService,
     ICollectionTaskConfigRepository collectionTaskConfigRepository,
     ISiteCollectorManager siteCollectorManager,
@@ -18,7 +20,7 @@ public partial class CollectionEngineService(
     ILogger<CollectionEngineService> logger,
     HttpClient httpClient) {
     private readonly ICollectionTaskRepository _collectionTaskRepository = collectionTaskRepository;
-    private readonly IAssetRepository _assetRepository = assetRepository;
+    private readonly ICollectedAssetRepository _assetRepository = assetRepository;
     private readonly ITaskExecutionService _taskExecutionService = taskExecutionService;
     private readonly ICollectionTaskConfigRepository _collectionTaskConfigRepository = collectionTaskConfigRepository;
     private readonly ISiteCollectorManager _siteCollectorManager = siteCollectorManager;
@@ -36,16 +38,16 @@ public partial class CollectionEngineService(
     private readonly ConcurrentQueue<string> _resourceUrlQueue = new();
     private readonly SemaphoreSlim _queueSemaphore = new(10, 10); // 控制资源下载的并发数
 
-    public async Task ProcessCollectionTaskAsync(Guid taskId) {
+    public async Task ProcessCollectionTaskAsync(Guid taskId, CancellationToken cancellationToken) {
         try {
             // 标记任务为正在运行
-            await _taskExecutionService.MarkTaskAsRunningAsync(taskId);
+            await _taskExecutionService.MarkTaskAsRunningAsync(taskId, cancellationToken);
 
-            var task = await _collectionTaskRepository.GetByIdAsync(taskId);
+            var task = await _collectionTaskRepository.GetByIdAsync(taskId, cancellationToken);
             if (task == null) {
                 if (_logger.IsEnabled(LogLevel.Error))
                     _logger.LogError("Collection task with ID {TaskId} not found", taskId);
-                await _taskExecutionService.MarkTaskAsFailedAsync(taskId);
+                await _taskExecutionService.MarkTaskAsFailedAsync(taskId, cancellationToken);
                 return;
             }
 
@@ -53,53 +55,53 @@ public partial class CollectionEngineService(
                 _logger.LogInformation("Starting collection task {TaskId} for URL: {Url}", taskId, task.Url);
 
             // 发布任务开始事件
-            await _eventPublisher.PublishAsync(new Contracts.Events.CollectionTaskStartedEvent {
+            await _eventPublisher.PublishAsync(new CollectionTaskStartedEvent {
                 TaskId = taskId,
                 TaskName = task.Name,
                 Url = task.Url
-            });
+            }, cancellationToken);
 
             // 更新任务状态为进行中
             task.Status = CollectionTaskStatus.InProgress;
             task.StartedAt = DateTime.UtcNow;
-            await _collectionTaskRepository.UpdateAsync(task);
-            await _collectionTaskRepository.SaveChangesAsync();
+            await _collectionTaskRepository.UpdateAsync(task, cancellationToken);
+            await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
 
             // 执行新的并行采集任务
-            var assets = await ExecuteParallelCollectionAsync(task);
+            var assets = await ExecuteParallelCollectionAsync(task, cancellationToken);
 
             // 更新任务的采集数量
             task.AssetsCollectedCount = assets.Count;
 
             // 确保最终进度被更新到数据库
-            await UpdateTaskProgressInDatabaseAsync(task);
+            await UpdateTaskProgressInDatabaseAsync(task, cancellationToken);
 
             // 保存采集到的素材
             foreach (var asset in assets) {
                 asset.CollectionTaskId = taskId;
                 asset.CreatedAt = DateTime.UtcNow;
-                await _assetRepository.AddAsync(asset);
+                await _assetRepository.AddAsync(asset, cancellationToken);
             }
 
-            await _assetRepository.SaveChangesAsync();
+            await _assetRepository.SaveChangesAsync(cancellationToken);
 
             // 更新任务状态为完成
             task.Status = CollectionTaskStatus.Completed;
             task.CompletedAt = DateTime.UtcNow;
-            task.Assets = assets;
-            await _collectionTaskRepository.UpdateAsync(task);
-            await _collectionTaskRepository.SaveChangesAsync();
+            task.SetNewAssets(assets);
+            await _collectionTaskRepository.UpdateAsync(task, cancellationToken);
+            await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
 
             // 标记任务执行完成
-            await _taskExecutionService.MarkTaskAsCompletedAsync(taskId);
+            await _taskExecutionService.MarkTaskAsCompletedAsync(taskId, cancellationToken);
 
             // 发布任务完成事件
-            await _eventPublisher.PublishAsync(new Contracts.Events.CollectionTaskCompletedEvent {
+            await _eventPublisher.PublishAsync(new CollectionTaskCompletedEvent {
                 TaskId = taskId,
                 TaskName = task.Name,
                 AssetsCollectedCount = assets.Count,
                 Status = task.Status
-            });
+            }, cancellationToken);
 
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Completed collection task {TaskId}, collected {AssetCount} assets", taskId, assets.Count);
@@ -109,36 +111,36 @@ public partial class CollectionEngineService(
                 _logger.LogError(ex, "Error processing collection task {TaskId}", taskId);
 
             // 更新任务状态为失败
-            var task = await _collectionTaskRepository.GetByIdAsync(taskId);
+            var task = await _collectionTaskRepository.GetByIdAsync(taskId, cancellationToken);
             if (task != null) {
                 task.Status = CollectionTaskStatus.Failed;
                 task.ErrorMessage = ex.Message;
                 task.CompletedAt = DateTime.UtcNow;
-                await _collectionTaskRepository.UpdateAsync(task);
-                await _collectionTaskRepository.SaveChangesAsync();
+                await _collectionTaskRepository.UpdateAsync(task, cancellationToken);
+                await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
             }
 
             // 发布任务失败事件
-            await _eventPublisher.PublishAsync(new Contracts.Events.CollectionTaskFailedEvent {
+            await _eventPublisher.PublishAsync(new CollectionTaskFailedEvent {
                 TaskId = taskId,
                 TaskName = task?.Name ?? "Unknown",
                 ErrorMessage = ex.Message
-            });
+            }, cancellationToken);
 
-            await _taskExecutionService.MarkTaskAsFailedAsync(taskId);
+            await _taskExecutionService.MarkTaskAsFailedAsync(taskId, cancellationToken);
         }
     }
 
-    private async Task<List<CollectedAsset>> ExecuteParallelCollectionAsync(CollectionTask task) {
+    private async Task<List<CollectedAsset>> ExecuteParallelCollectionAsync(CollectionTask task, CancellationToken cancellationToken) {
         var assets = new List<CollectedAsset>();
         var completedParsing = new TaskCompletionSource<bool>();
 
         try {
             // 启动页面解析任务（带自动翻页）
-            var parsingTask = Task.Run(async () => await ParsePagesWithPaginationAsync(task, completedParsing));
+            var parsingTask = Task.Run(async () => await ParsePagesWithPaginationAsync(task, completedParsing, cancellationToken), cancellationToken);
 
             // 启动资源下载任务
-            var downloadingTask = Task.Run(async () => await ProcessResourceDownloadsAsync(task, assets, completedParsing));
+            var downloadingTask = Task.Run(async () => await ProcessResourceDownloadsAsync(task, assets, completedParsing, cancellationToken), cancellationToken);
 
             // 等待两个任务完成
             await Task.WhenAll(parsingTask, downloadingTask);
@@ -155,18 +157,19 @@ public partial class CollectionEngineService(
     /// <summary>
     /// 解析页面（带自动翻页功能）
     /// </summary>
-    private async Task ParsePagesWithPaginationAsync(CollectionTask task, TaskCompletionSource<bool> parsingCompleted) {
+    private async Task ParsePagesWithPaginationAsync(CollectionTask task, TaskCompletionSource<bool> parsingCompleted, CancellationToken cancellationToken) {
         var parsedUrls = new List<string>();
         var currentPage = 1;
         var baseUrl = task.Url;
+        ArgumentNullException.ThrowIfNull(baseUrl, nameof(task.Url));
 
         // 获取任务配置，如果任务有关联的配置，则使用配置中的参数
         var config = task.ConfigId.HasValue ?
-            await _collectionTaskConfigRepository.GetByIdAsync(task.ConfigId.Value) : null;
+            await _collectionTaskConfigRepository.GetByIdAsync(task.ConfigId.Value, cancellationToken) : null;
 
         // 确定最大解析条目数 - 优先使用配置，然后是任务参数，最后是默认值
         var maxParseItems = config?.MaxParseItems ??
-                           (task.Parameters.TryGetValue("MaxParseItems", out string? value) ?
+                           (task.Parameters?.TryGetValue("MaxParseItems", out string? value) == true ?
                                int.Parse(value) : 100);
 
         // 确定请求延迟 - 优先使用配置
@@ -177,7 +180,7 @@ public partial class CollectionEngineService(
 
         try {
             // 解析第一页
-            var firstPageUrls = await ParsePageAsync(task, baseUrl, config);
+            var firstPageUrls = await ParsePageAsync(task, baseUrl, config, cancellationToken);
             foreach (var url in firstPageUrls) {
                 _resourceUrlQueue.Enqueue(url);
                 parsedUrls.Add(url);
@@ -188,11 +191,11 @@ public partial class CollectionEngineService(
                     Name = Path.GetFileName(new Uri(url).LocalPath) ?? $"asset_{Guid.NewGuid()}",
                     Url = url,
                     CollectionTaskId = task.Id,
-                    Status = AssetStatus.Pending,
+                    Status = CollectedAssetStatus.Pending,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                await _assetRepository.AddAsync(asset);
+                await _assetRepository.AddAsync(asset, cancellationToken);
 
                 // 检查是否已达到最大解析条目数
                 if (parsedUrls.Count >= maxParseItems) {
@@ -201,7 +204,7 @@ public partial class CollectionEngineService(
             }
 
             // 保存所有新解析的素材到数据库
-            await _assetRepository.SaveChangesAsync();
+            await _assetRepository.SaveChangesAsync(cancellationToken);
 
             // 如果启用了自动翻页且未达到最大条目数，继续翻页
             while (enableAutoPagination && parsedUrls.Count < maxParseItems) {
@@ -213,7 +216,7 @@ public partial class CollectionEngineService(
                     break; // 无法构造下一页URL，停止翻页
                 }
 
-                var nextPageUrls = await ParsePageAsync(task, nextPageUrl, config);
+                var nextPageUrls = await ParsePageAsync(task, nextPageUrl, config, cancellationToken);
                 if (!nextPageUrls.Any()) {
                     break; // 没有更多内容，停止翻页
                 }
@@ -228,11 +231,11 @@ public partial class CollectionEngineService(
                         Name = Path.GetFileName(new Uri(url).LocalPath) ?? $"asset_{Guid.NewGuid()}",
                         Url = url,
                         CollectionTaskId = task.Id,
-                        Status = AssetStatus.Pending,
+                        Status = CollectedAssetStatus.Pending,
                         CreatedAt = DateTime.UtcNow
                     };
 
-                    await _assetRepository.AddAsync(asset);
+                    await _assetRepository.AddAsync(asset, cancellationToken);
 
                     // 检查是否已达到最大解析条目数
                     if (parsedUrls.Count >= maxParseItems) {
@@ -241,18 +244,18 @@ public partial class CollectionEngineService(
                 }
 
                 // 保存当前页面解析的素材到数据库
-                await _assetRepository.SaveChangesAsync();
+                await _assetRepository.SaveChangesAsync(cancellationToken);
 
                 currentPage++;
 
                 // 短暂延迟以避免过于频繁的请求
-                await Task.Delay(requestDelayMs);
+                await Task.Delay(requestDelayMs, cancellationToken);
             }
 
             // 更新任务的预期资源数量
             task.TotalAssetsExpected = parsedUrls.Count;
-            await _collectionTaskRepository.UpdateAsync(task);
-            await _collectionTaskRepository.SaveChangesAsync();
+            await _collectionTaskRepository.UpdateAsync(task, cancellationToken);
+            await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
@@ -268,7 +271,7 @@ public partial class CollectionEngineService(
     /// <summary>
     /// 解析单个页面获取资源URL
     /// </summary>
-    private async Task<IEnumerable<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config = null) {
+    private async Task<IEnumerable<string>> ParsePageAsync(CollectionTask task, string pageUrl, CollectionTaskConfig? config, CancellationToken cancellationToken) {
         try {
             // 获取适合当前URL的站点采集器
             var siteCollector = _siteCollectorManager.GetCollectorForUrl(pageUrl);
@@ -278,7 +281,7 @@ public partial class CollectionEngineService(
                 return [];
             }
 
-            return await siteCollector.ParsePageAsync(task, pageUrl, config);
+            return await siteCollector.ParsePageAsync(task, pageUrl, config, cancellationToken);
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
@@ -328,20 +331,20 @@ public partial class CollectionEngineService(
         return ConstructNextPageUrlDefault(baseUrl, pageNumber);
     }
 
-    private async Task<List<CollectedAsset>> ExecuteCollectionAsync(CollectionTask task) {
+    private async Task<List<CollectedAsset>> ExecuteCollectionAsync(CollectionTask task, CancellationToken cancellationToken) {
         var assets = new List<CollectedAsset>();
 
         try {
             // 获取网页内容
-            var htmlContent = await _httpClient.GetStringAsync(task.Url);
+            var htmlContent = await _httpClient.GetStringAsync(task.Url, cancellationToken);
 
             // 使用正则表达式或HTML解析器根据选择器提取资源链接
             var assetUrls = ExtractAssetUrls(htmlContent, task.Selector);
 
             // 更新任务的预期资源数量
             task.TotalAssetsExpected = assetUrls.Count;
-            await _collectionTaskRepository.UpdateAsync(task);
-            await _collectionTaskRepository.SaveChangesAsync();
+            await _collectionTaskRepository.UpdateAsync(task, cancellationToken);
+            await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
 
             // 使用并发限制来下载资源
             using var semaphore = new SemaphoreSlim(task.MaxConcurrency);
@@ -349,16 +352,16 @@ public partial class CollectionEngineService(
 
             foreach (var assetUrl in assetUrls.Take(100)) // 限制采集数量，避免过度采集
             {
-                downloadTasks.Add(ProcessAssetAsync(semaphore, task, assetUrl, assets));
+                downloadTasks.Add(ProcessAssetAsync(semaphore, task, assetUrl, assets, cancellationToken));
             }
 
             // 启动一个后台任务定期更新进度
             var progressUpdateTask = Task.Run(async () => {
                 while (downloadTasks.Any(t => !t.IsCompleted || !t.IsCanceled || !t.IsFaulted)) {
                     await Task.Delay(1000); // 每秒检查一次进度更新
-                    await UpdatePendingProgressInDatabaseAsync(task.Id);
+                    await UpdatePendingProgressInDatabaseAsync(task.Id, cancellationToken);
                 }
-            });
+            }, cancellationToken);
 
             await Task.WhenAll(downloadTasks);
 
@@ -366,7 +369,7 @@ public partial class CollectionEngineService(
             await progressUpdateTask;
 
             // 确保剩余的进度更新也被写入数据库
-            await UpdatePendingProgressInDatabaseAsync(task.Id);
+            await UpdatePendingProgressInDatabaseAsync(task.Id, cancellationToken);
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
@@ -380,13 +383,13 @@ public partial class CollectionEngineService(
     /// <summary>
     /// 处理资源下载任务
     /// </summary>
-    private async Task ProcessResourceDownloadsAsync(CollectionTask task, List<CollectedAsset> assets, TaskCompletionSource<bool> parsingCompleted) {
+    private async Task ProcessResourceDownloadsAsync(CollectionTask task, List<CollectedAsset> assets, TaskCompletionSource<bool> parsingCompleted, CancellationToken cancellationToken) {
         var downloadTasks = new List<Task>();
         var maxConcurrency = task.MaxConcurrency;
 
         // 启动指定数量的下载器
         for (int i = 0; i < maxConcurrency; i++) {
-            downloadTasks.Add(StartDownloaderAsync(task, assets, parsingCompleted));
+            downloadTasks.Add(StartDownloaderAsync(task, assets, parsingCompleted, cancellationToken));
         }
 
         await Task.WhenAll(downloadTasks);
@@ -395,39 +398,39 @@ public partial class CollectionEngineService(
     /// <summary>
     /// 启动单个下载器
     /// </summary>
-    private async Task StartDownloaderAsync(CollectionTask task, List<CollectedAsset> assets, TaskCompletionSource<bool> parsingCompleted) {
+    private async Task StartDownloaderAsync(CollectionTask task, List<CollectedAsset> assets, TaskCompletionSource<bool> parsingCompleted, CancellationToken cancellationToken) {
         // 获取任务配置
         var config = task.ConfigId.HasValue ?
-            await _collectionTaskConfigRepository.GetByIdAsync(task.ConfigId.Value) : null;
+            await _collectionTaskConfigRepository.GetByIdAsync(task.ConfigId.Value, cancellationToken) : null;
         while (true) {
 
             // 从队列中获取资源URL
             if (_resourceUrlQueue.TryDequeue(out string? assetUrl)) {
                 // 根据URL查找数据库中的素材记录
-                var existingAsset = await _assetRepository.GetByUrlAsync(assetUrl);
+                var existingAsset = await _assetRepository.GetByUrlAsync(assetUrl, cancellationToken);
                 if (existingAsset != null && existingAsset.CollectionTaskId == task.Id) {
                     // 预处理资源URL
-                    var absoluteUrl = ResolveUrl(task.Url, assetUrl);
-                    var processedUrl = await PreprocessAssetUrlAsync(absoluteUrl, config);
+                    var absoluteUrl = ResolveUrl(task.Url!, assetUrl);
+                    var processedUrl = PreprocessAssetUrl(absoluteUrl, config);
 
                     // 发布资源下载开始事件
-                    await _eventPublisher.PublishAsync(new Contracts.Events.AssetDownloadStartedEvent {
+                    await _eventPublisher.PublishAsync(new AssetDownloadStartedEvent {
                         TaskId = task.Id,
                         AssetId = existingAsset.Id,
                         AssetUrl = absoluteUrl
-                    });
+                    }, cancellationToken);
 
                     // 更新素材状态为采集中
-                    existingAsset.Status = AssetStatus.InProgress;
-                    await _assetRepository.UpdateAsync(existingAsset);
-                    await _assetRepository.SaveChangesAsync();
+                    existingAsset.Status = CollectedAssetStatus.InProgress;
+                    await _assetRepository.UpdateAsync(existingAsset, cancellationToken);
+                    await _assetRepository.SaveChangesAsync(cancellationToken);
 
                     // 使用站点采集器下载资源
-                    var downloadedAsset = await DownloadAssetWithSiteCollectorAsync(processedUrl, config);
+                    var downloadedAsset = await DownloadAssetWithSiteCollectorAsync(processedUrl, config, cancellationToken);
 
                     if (downloadedAsset != null) {
                         // 更新素材状态为已完成
-                        existingAsset.Status = AssetStatus.Completed;
+                        existingAsset.Status = CollectedAssetStatus.Completed;
                         existingAsset.Size = downloadedAsset.Size;
                         existingAsset.ContentType = downloadedAsset.ContentType;
                         existingAsset.LocalPath = downloadedAsset.LocalPath;
@@ -435,23 +438,23 @@ public partial class CollectionEngineService(
                     }
                     else {
                         // 更新素材状态为失败
-                        existingAsset.Status = AssetStatus.Failed;
+                        existingAsset.Status = CollectedAssetStatus.Failed;
                         existingAsset.ErrorMessage = "Failed to download asset";
                     }
 
-                    await _assetRepository.UpdateAsync(existingAsset);
-                    await _assetRepository.SaveChangesAsync();
+                    await _assetRepository.UpdateAsync(existingAsset, cancellationToken);
+                    await _assetRepository.SaveChangesAsync(cancellationToken);
 
                     // 发布资源下载完成事件
-                    await _eventPublisher.PublishAsync(new Contracts.Events.AssetDownloadCompletedEvent {
+                    await _eventPublisher.PublishAsync(new AssetDownloadCompletedEvent {
                         TaskId = task.Id,
                         AssetId = existingAsset.Id,
                         AssetUrl = absoluteUrl,
                         Size = existingAsset.Size,
                         ContentType = existingAsset.ContentType,
-                        Success = existingAsset.Status == AssetStatus.Completed,
+                        Success = existingAsset.Status == CollectedAssetStatus.Completed,
                         ErrorMessage = existingAsset.ErrorMessage
-                    });
+                    }, cancellationToken);
 
                     lock (assets) {
                         assets.Add(existingAsset);
@@ -474,21 +477,21 @@ public partial class CollectionEngineService(
                 }
 
                 // 队列为空，短暂等待后重试
-                await Task.Delay(100);
+                await Task.Delay(100, cancellationToken);
             }
         }
     }
 
-    private async Task ProcessAssetAsync(SemaphoreSlim semaphore, CollectionTask task, string assetUrl, List<CollectedAsset> assets) {
-        await semaphore.WaitAsync();
+    private async Task ProcessAssetAsync(SemaphoreSlim semaphore, CollectionTask task, string assetUrl, List<CollectedAsset> assets, CancellationToken cancellationToken) {
+        await semaphore.WaitAsync(cancellationToken);
         try {
             // 获取任务配置
             var config = task.ConfigId.HasValue ?
-                await _collectionTaskConfigRepository.GetByIdAsync(task.ConfigId.Value) : null;
+                await _collectionTaskConfigRepository.GetByIdAsync(task.ConfigId.Value, cancellationToken) : null;
 
-            var absoluteUrl = ResolveUrl(task.Url, assetUrl);
-            var processedUrl = await PreprocessAssetUrlAsync(absoluteUrl, config);
-            var asset = await DownloadAssetWithSiteCollectorAsync(processedUrl, config);
+            var absoluteUrl = ResolveUrl(task.Url!, assetUrl);
+            var processedUrl = PreprocessAssetUrl(absoluteUrl, config);
+            var asset = await DownloadAssetWithSiteCollectorAsync(processedUrl, config, cancellationToken);
 
             if (asset != null) {
                 lock (assets) {
@@ -512,7 +515,7 @@ public partial class CollectionEngineService(
                 }
 
                 // 发布资源下载完成事件
-                await _eventPublisher.PublishAsync(new Contracts.Events.AssetDownloadCompletedEvent {
+                await _eventPublisher.PublishAsync(new AssetDownloadCompletedEvent {
                     TaskId = task.Id,
                     AssetId = asset.Id,
                     AssetUrl = asset.Url,
@@ -520,17 +523,17 @@ public partial class CollectionEngineService(
                     ContentType = asset.ContentType,
                     Success = true,
                     ErrorMessage = null
-                });
+                }, cancellationToken);
             }
             else {
                 // 发布资源下载失败事件
-                await _eventPublisher.PublishAsync(new Contracts.Events.AssetDownloadCompletedEvent {
+                await _eventPublisher.PublishAsync(new AssetDownloadCompletedEvent {
                     TaskId = task.Id,
                     AssetId = Guid.Empty, // 未知资源ID
                     AssetUrl = absoluteUrl,
                     Success = false,
                     ErrorMessage = "Failed to download asset"
-                });
+                }, cancellationToken);
             }
         }
         finally {
@@ -538,31 +541,31 @@ public partial class CollectionEngineService(
         }
     }
 
-    private async Task UpdatePendingProgressInDatabaseAsync(Guid taskId) {
+    private async Task UpdatePendingProgressInDatabaseAsync(Guid taskId, CancellationToken cancellationToken) {
         // 检查是否有待处理的进度更新
         if (_pendingProgressUpdates.TryGetValue(taskId, out int progressIncrement) && progressIncrement > 0) {
             // 使用信号量确保只有一个线程可以更新数据库
-            await _dbUpdateSemaphore.WaitAsync();
+            await _dbUpdateSemaphore.WaitAsync(cancellationToken);
             try {
                 // 从数据库重新加载任务以避免并发问题
-                var freshTask = await _collectionTaskRepository.GetByIdAsync(taskId);
+                var freshTask = await _collectionTaskRepository.GetByIdAsync(taskId, cancellationToken);
                 if (freshTask != null) {
                     freshTask.AssetsCollectedCount += progressIncrement;
                     // 确保计数不会超过预期总数
                     freshTask.AssetsCollectedCount = Math.Min(freshTask.AssetsCollectedCount, freshTask.TotalAssetsExpected);
 
-                    await _collectionTaskRepository.UpdateAsync(freshTask);
-                    await _collectionTaskRepository.SaveChangesAsync();
+                    await _collectionTaskRepository.UpdateAsync(freshTask, cancellationToken);
+                    await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
 
                     // 发布进度更新事件
-                    var progressEvent = new Contracts.Events.CollectionTaskProgressEvent {
+                    var progressEvent = new CollectionTaskProgressEvent {
                         TaskId = freshTask.Id,
                         AssetsCollectedCount = freshTask.AssetsCollectedCount,
                         TotalAssetsExpected = freshTask.TotalAssetsExpected,
                         ProgressPercentage = freshTask.TotalAssetsExpected > 0 ?
                             (double)freshTask.AssetsCollectedCount / freshTask.TotalAssetsExpected * 100 : 0
                     };
-                    await _eventPublisher.PublishAsync(progressEvent);
+                    await _eventPublisher.PublishAsync(progressEvent, cancellationToken);
 
                     // 从待处理更新中减去已处理的进度
                     _pendingProgressUpdates.AddOrUpdate(taskId, 0, (key, value) => value - progressIncrement);
@@ -578,26 +581,26 @@ public partial class CollectionEngineService(
         }
     }
 
-    private async Task UpdateTaskProgressInDatabaseAsync(CollectionTask task) {
+    private async Task UpdateTaskProgressInDatabaseAsync(CollectionTask task, CancellationToken cancellationToken) {
         // 使用信号量确保只有一个线程可以更新数据库
-        await _dbUpdateSemaphore.WaitAsync();
+        await _dbUpdateSemaphore.WaitAsync(cancellationToken);
         try {
             // 从数据库重新加载任务以避免并发问题
-            var freshTask = await _collectionTaskRepository.GetByIdAsync(task.Id);
+            var freshTask = await _collectionTaskRepository.GetByIdAsync(task.Id, cancellationToken);
             if (freshTask != null) {
                 freshTask.AssetsCollectedCount = task.AssetsCollectedCount;
-                await _collectionTaskRepository.UpdateAsync(freshTask);
-                await _collectionTaskRepository.SaveChangesAsync();
+                await _collectionTaskRepository.UpdateAsync(freshTask, cancellationToken);
+                await _collectionTaskRepository.SaveChangesAsync(cancellationToken);
 
                 // 发布进度更新事件
-                var progressEvent = new Contracts.Events.CollectionTaskProgressEvent {
+                var progressEvent = new CollectionTaskProgressEvent {
                     TaskId = freshTask.Id,
                     AssetsCollectedCount = freshTask.AssetsCollectedCount,
                     TotalAssetsExpected = freshTask.TotalAssetsExpected,
                     ProgressPercentage = freshTask.TotalAssetsExpected > 0 ?
                         (double)freshTask.AssetsCollectedCount / freshTask.TotalAssetsExpected * 100 : 0
                 };
-                await _eventPublisher.PublishAsync(progressEvent);
+                await _eventPublisher.PublishAsync(progressEvent, cancellationToken);
             }
         }
         catch (Exception ex) {
@@ -609,18 +612,18 @@ public partial class CollectionEngineService(
         }
     }
 
-    private async Task<CollectedAsset?> DownloadAssetWithSiteCollectorAsync(string url, CollectionTaskConfig? config = null) {
+    private async Task<CollectedAsset?> DownloadAssetWithSiteCollectorAsync(string url, CollectionTaskConfig? config, CancellationToken cancellationToken) {
         try {
             // 获取适合当前URL的站点采集器
             var siteCollector = _siteCollectorManager.GetCollectorForUrl(url);
             if (siteCollector != null) {
-                return await siteCollector.DownloadAssetAsync(url, config);
+                return await siteCollector.DownloadAssetAsync(url, config, cancellationToken);
             }
 
             // 如果没有找到特定采集器，使用通用采集器
             var genericCollector = _siteCollectorManager.GetCollectorByIdentifier("generic");
             if (genericCollector != null) {
-                return await genericCollector.DownloadAssetAsync(url, config);
+                return await genericCollector.DownloadAssetAsync(url, config, cancellationToken);
             }
 
             if (_logger.IsEnabled(LogLevel.Warning))
@@ -634,7 +637,7 @@ public partial class CollectionEngineService(
         }
     }
 
-    private async Task<string> PreprocessAssetUrlAsync(string url, CollectionTaskConfig? config = null) {
+    private string PreprocessAssetUrl(string url, CollectionTaskConfig? config) {
         try {
             // 获取适合当前URL的站点采集器
             var siteCollector = _siteCollectorManager.GetCollectorForUrl(url);
@@ -658,12 +661,12 @@ public partial class CollectionEngineService(
         }
     }
 
-    private static List<string> ExtractAssetUrls(string htmlContent, string selector) {
+    private static List<string> ExtractAssetUrls(string htmlContent, string? selector) {
         // 简单的正则表达式匹配，实际应用中可能需要更复杂的HTML解析
         var urls = new List<string>();
 
         // 根据选择器类型提取URL
-        if (selector.StartsWith("img")) {
+        if (selector?.StartsWith("img") is true) {
             // 提取图片URL
             var imgRegex = ImgRegex();
             var matches = imgRegex.Matches(htmlContent);
@@ -674,7 +677,7 @@ public partial class CollectionEngineService(
                 }
             }
         }
-        else if (selector.StartsWith('a')) {
+        else if (selector?.StartsWith('a') is true) {
             // 提取链接URL
             var linkRegex = LinkRegex();
             var matches = linkRegex.Matches(htmlContent);
@@ -687,7 +690,7 @@ public partial class CollectionEngineService(
         }
         else {
             // 使用通用的选择器匹配
-            var genericRegex = new Regex(selector, RegexOptions.IgnoreCase);
+            var genericRegex = new Regex(selector ?? "a", RegexOptions.IgnoreCase);
             var matches = genericRegex.Matches(htmlContent);
             foreach (Match match in matches) {
                 if (match.Groups.Count > 0) {
