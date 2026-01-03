@@ -13,15 +13,13 @@ builder.Logging.AddConsole();
 
 builder.Services.AddSuCaiFlow()
                 .AddCore(options => options
+                .AddSiteCollector<ExampleSiteCollector>()
                 .UseEntityFrameworkCore()
                 .UseDbContext<SuCaiFlowDbContext>());
 
 builder.Services.AddDbContext<SuCaiFlowDbContext>(options => options
                 .UseInMemoryDatabase("SuCaiFlowDemo")
                 .UseSuCaiFlow());
-
-// 注册示例站点采集器
-builder.Services.AddScoped<ISiteCollector, ExampleSiteCollector>();
 
 // 构建主机
 var host = builder.Build();

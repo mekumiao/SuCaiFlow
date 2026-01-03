@@ -19,9 +19,18 @@ public static class SuCaiFlowCoreExtensions {
         builder.Services.TryAddScoped<ICollectedAssetService, CollectedAssetService>();
         builder.Services.TryAddScoped<ICollectionTaskService, CollectionTaskService>();
         builder.Services.TryAddScoped<ITaskExecutionService, TaskExecutionService>();
-        builder.Services.TryAddScoped<ISiteCollectorManager, SiteCollectorManager>();
         builder.Services.TryAddScoped<IEventPublisher, EventPublisher>();
         builder.Services.TryAddScoped<CollectionEngineService>();
+
+        builder.Services.TryAddScoped<ISiteCollectorManager>(provider => {
+            var options = provider.GetRequiredService<IOptions<SuCaiFlowCoreOptions>>().Value;
+            var service = provider.GetRequiredService<SiteCollectorManager>();
+            foreach (var item in options.SiteCollectorImplementTypes) {
+                if (provider.GetService(item) is ISiteCollector collector)
+                    service.RegisterCollector(collector);
+            }
+            return service;
+        });
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<
             IPostConfigureOptions<SuCaiFlowCoreOptions>, SuCaiFlowConfiguration>());
