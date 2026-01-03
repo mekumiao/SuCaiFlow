@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\SuCaiFlow.Core\SuCaiFlow.Core.csproj" />
-    <ProjectReference Include="..\..\src\SuCaiFlow.EntityFramework\SuCaiFlow.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\src\SuCaiFlow.EntityFrameworkCore\SuCaiFlow.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
 </Project>
