@@ -16,8 +16,9 @@ builder.Services.AddSuCaiFlow()
                 .UseEntityFrameworkCore()
                 .UseDbContext<SuCaiFlowDbContext>());
 
-builder.Services.AddDbContext<SuCaiFlowDbContext>(options =>
-    options.UseInMemoryDatabase("SuCaiFlowDemo").UseSuCaiFlow());
+builder.Services.AddDbContext<SuCaiFlowDbContext>(options => options
+                .UseInMemoryDatabase("SuCaiFlowDemo")
+                .UseSuCaiFlow());
 
 // 注册示例站点采集器
 builder.Services.AddScoped<ISiteCollector, ExampleSiteCollector>();

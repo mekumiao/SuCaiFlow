@@ -4,7 +4,7 @@ SuCaiFlow 是一个素材采集流程库，旨在提供一个灵活、可扩展�
 
 ## 功能特性
 
-- **模块化设计**: 分为 Contracts、Core 和 EntityFramework 三个组件，便于独立使用
+- **模块化设计**: 分为 Contracts、Core 和 EntityFrameworkCore 三个组件，便于独立使用
 - **EF Core 集成**: 提供完整的 EF Core 支持，包括 PostgreSQL 等数据库
 - **事件驱动**: 内置事件发布机制，便于扩展和监控
 - **多站点支持**: 支持多种站点的采集器，可轻松扩展
@@ -14,7 +14,7 @@ SuCaiFlow 是一个素材采集流程库，旨在提供一个灵活、可扩展�
 ## 安装
 
 ```xml
-<PackageReference Include="SuCaiFlow" Version="1.0.0" />
+<PackageReference Include="SuCaiFlow.EntityFrameworkCore" Version="1.0.0" />
 ```
 
 或者通过项目引用方式使用。
@@ -25,19 +25,22 @@ SuCaiFlow 是一个素材采集流程库，旨在提供一个灵活、可扩展�
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SuCaiFlow.Core.Extensions;
-using SuCaiFlow.EntityFramework.Extensions;
+using Microsoft.Extensions.Logging;
+
+using SuCaiFlow.Contracts.Services;
+using SuCaiFlow.Core;
+using SuCaiFlow.Example;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// 添加 SuCaiFlow 服务
-builder.Services.AddSuCaiFlow();
+builder.Services.AddSuCaiFlow()
+                .AddCore(options => options
+                .UseEntityFrameworkCore()
+                .UseDbContext<SuCaiFlowDbContext>());
 
-// 添加 SuCaiFlow 数据库上下文和仓储
-builder.Services.AddSuCaiFlowDbContext<SuCaiFlowDbContext>(options =>
-options.UseInMemoryDatabase("SuCaiFlowDemo"));
-
-builder.Services.AddSuCaiFlowRepositories();
+builder.Services.AddDbContext<SuCaiFlowDbContext>(options => options
+                .UseInMemoryDatabase("SuCaiFlowDemo")
+                .UseSuCaiFlow());
 
 var host = builder.Build();
 
