@@ -8,12 +8,10 @@ namespace SuCaiFlow.Core.Services;
 /// <summary>
 /// 站点采集器管理器实现
 /// </summary>
-public class SiteCollectorManager(
-    ILogger<SiteCollectorManager> logger,
-    IOptions<SuCaiFlowCoreOptions> options) : ISiteCollectorManager {
+public class SiteCollectorManager(ILogger<SiteCollectorManager> logger) : ISiteCollectorManager {
 
     private readonly ILogger<SiteCollectorManager> _logger = logger;
-    private readonly List<ISiteCollector> _collectors = options.Value.SiteCollectors;
+    private readonly List<ISiteCollector> _collectors = [];
 
     public void RegisterCollector(ISiteCollector collector) {
         if (_collectors.Any(c => c.SiteIdentifier.Equals(collector.SiteIdentifier, StringComparison.OrdinalIgnoreCase))) {
