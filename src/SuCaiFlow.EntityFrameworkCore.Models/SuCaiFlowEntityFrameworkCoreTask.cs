@@ -32,7 +32,7 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual DateTime? CompletedAt { get; set; }
 
-    public virtual int AssetsCollectedCount { get; set; }
+    public virtual int AssetsDownloadCount { get; set; }
 
     public virtual int TotalAssetsExpected { get; set; }
 
