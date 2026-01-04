@@ -1,0 +1,19 @@
+<Project>
+  <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
+  <Target Name="CustomAfterBuildTarget" AfterTargets="Build">
+      <Message Text="Hello from CustomAfterBuildTarget" Importance="high" />
+  </Target>
+
+  <PropertyGroup
+    Condition=" $(RepoRelativeProjectDir.Contains('src')) And
+               '$(TargetFrameworkIdentifier)' == '.NETCoreApp' And
+                $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) ">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup
+    Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' And $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) ">
+    <DefineConstants>$(DefineConstants);SUPPORTS_TYPE_DESCRIPTOR_TYPE_REGISTRATION</DefineConstants>
+  </PropertyGroup>
+
+</Project>

@@ -11,12 +11,14 @@
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/SuCaiFlow.Contracts/SuCaiFlow.Contracts.csproj" />
-    <Project Path="src/SuCaiFlow.Core/SuCaiFlow.Core.csproj" />
+    <Project Path="src/SuCaiFlow.Abstractions/SuCaiFlow.Abstractions.csproj" />
+    <Project Path="src/SuCaiFlow.Engine/SuCaiFlow.Engine.csproj" />
+    <Project Path="src/SuCaiFlow.EntityFrameworkCore.Models/SuCaiFlow.EntityFrameworkCore.Models.csproj" />
     <Project Path="src/SuCaiFlow.EntityFrameworkCore/SuCaiFlow.EntityFrameworkCore.csproj" />
   </Folder>
 </Solution>

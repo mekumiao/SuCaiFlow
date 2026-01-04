@@ -1,21 +1,22 @@
-#pragma warning disable IDE0130 // 命名空间与文件夹结构不匹配
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-using SuCaiFlow.Core;
+using SuCaiFlow.Engine;
 using SuCaiFlow.EntityFrameworkCore;
-using SuCaiFlow.EntityFrameworkCore.Repositories;
+using SuCaiFlow.EntityFrameworkCore.Models;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class SuCaiFlowEntityFrameworkCoreExtensions {
 
-    public static SuCaiFlowEntityFrameworkCoreBuilder UseEntityFrameworkCore(this SuCaiFlowCoreBuilder builder) {
+    public static SuCaiFlowEntityFrameworkCoreBuilder UseEntityFrameworkCore(this SuCaiFlowEngineBuilder builder) {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.ReplaceCollectedAssetRepository<CollectedAssetRepository>()
-               .ReplaceCollectionTaskRepository<CollectionTaskRepository>()
-               .ReplaceCollectionTaskConfigRepository<CollectionTaskConfigRepository>();
+        builder.SetDefaultTaskEntity<SuCaiFlowEntityFrameworkCoreTask>()
+               .SetDefaultAssetEntity<SuCaiFlowEntityFrameworkCoreAsset>();
+
+        builder.ReplaceTaskStore<SuCaiFlowEntityFrameworkCoreTask, SuCaiFlowEntityFrameworkCoreTaskStore>()
+               .ReplaceAssetStore<SuCaiFlowEntityFrameworkCoreAsset, SuCaiFlowEntityFrameworkCoreAssetStore>();
 
         builder.Services.TryAddScoped<ISuCaiFlowEntityFrameworkCoreContext>(static provider =>
             throw new InvalidOperationException("未注册DbContext"));

@@ -1,30 +1,52 @@
-#pragma warning disable IDE0130 // 命名空间与文件夹结构不匹配
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 using SuCaiFlow.EntityFrameworkCore;
-using SuCaiFlow.EntityFrameworkCore.Configurations;
+using SuCaiFlow.EntityFrameworkCore.Models;
 
 namespace Microsoft.EntityFrameworkCore;
 
 public static class SuCaiFlowEntityFrameworkCoreHelpers {
-    public static DbContextOptionsBuilder<TContext> UseOpenIddict<TContext>(this DbContextOptionsBuilder<TContext> builder)
-       where TContext : DbContext {
-        builder.UseSuCaiFlow();
+    public static DbContextOptionsBuilder<TContext> UseSuCaiFlow<TContext>(this DbContextOptionsBuilder<TContext> builder)
+        where TContext : DbContext {
+        ((DbContextOptionsBuilder)builder).UseSuCaiFlow();
         return builder;
     }
 
     public static DbContextOptionsBuilder UseSuCaiFlow(this DbContextOptionsBuilder builder) {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        return builder.ReplaceService<IModelCustomizer, SuCaiFlowEntityFrameworkCoreCustomizer>();
+        return builder.UseSuCaiFlow<SuCaiFlowEntityFrameworkCoreTask, SuCaiFlowEntityFrameworkCoreAsset, string>();
     }
 
-    public static ModelBuilder UseSuCaiFlow(this ModelBuilder builder) {
+    public static DbContextOptionsBuilder UseSuCaiFlow<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey>(this DbContextOptionsBuilder builder)
+        where TKey : notnull, IEquatable<TKey> {
+        return builder.UseSuCaiFlow<SuCaiFlowEntityFrameworkCoreTask<TKey>, SuCaiFlowEntityFrameworkCoreAsset<TKey>, TKey>();
+    }
+
+    public static DbContextOptionsBuilder UseSuCaiFlow<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TTask,
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TAsset,
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey>(this DbContextOptionsBuilder builder)
+        where TTask : SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
+        where TAsset : SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
+        where TKey : notnull, IEquatable<TKey> {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.ReplaceService<IModelCustomizer, SuCaiFlowEntityFrameworkCoreCustomizer<TTask, TAsset, TKey>>();
+    }
+
+    public static ModelBuilder UseSuCaiFlow<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TTask,
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TAsset,
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey>(this ModelBuilder builder)
+        where TTask : SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
+        where TAsset : SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
+        where TKey : notnull, IEquatable<TKey> {
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder
-            .ApplyConfiguration(new CollectionTaskConfiguration())
-            .ApplyConfiguration(new CollectedAssetConfiguration())
-            .ApplyConfiguration(new CollectionTaskConfigConfiguration());
+            .ApplyConfiguration(new SuCaiFlowEntityFrameworkCoreTaskConfiguration<TTask, TAsset, TKey>())
+            .ApplyConfiguration(new SuCaiFlowEntityFrameworkCoreAssetConfiguration<TAsset, TTask, TKey>());
     }
 }

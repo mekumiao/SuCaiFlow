@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Relational entities for the SuCaiFlow Entity Framework Core stores.</Description>
+    <PackageTags>$(PackageTags);entityframeworkcore;models</PackageTags>
+  </PropertyGroup>
+
+</Project>

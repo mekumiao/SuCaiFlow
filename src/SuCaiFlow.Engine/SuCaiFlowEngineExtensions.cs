@@ -1,0 +1,50 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+
+using SuCaiFlow.Abstractions;
+using SuCaiFlow.Core.Services;
+
+namespace SuCaiFlow.Engine;
+
+public static class SuCaiFlowEngineExtensions {
+    public static SuCaiFlowEngineBuilder AddEngine(this SuCaiFlowBuilder builder) {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.Services.AddLogging();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddOptions();
+
+        builder.Services.TryAddScoped(typeof(SuCaiFlowTaskManager<>));
+        builder.Services.TryAddScoped(typeof(SuCaiFlowAssetManager<>));
+
+        builder.Services.TryAddScoped<ISuCaiFlowTaskManager>(static provider =>
+            throw new InvalidOperationException());
+        builder.Services.TryAddScoped<ISuCaiFlowAssetManager>(static provider =>
+            throw new InvalidOperationException());
+
+        builder.Services.TryAddScoped<SuCaiFlowEngineTaskExecution>();
+        builder.Services.TryAddScoped<SuCaiFlowEngineService>();
+        builder.Services.TryAddScoped<ISuCaiFlowEngineEventPublisher, SuCaiFlowEngineDefaultEventPublisher>();
+
+        builder.Services.TryAddScoped<ISuCaiFlowEngineSiteCollectorManager>(provider => {
+            var options = provider.GetRequiredService<IOptions<SuCaiFlowEngineOptions>>().Value;
+            var service = provider.GetRequiredService<SuCaiFlowEngineSiteCollectorManager>();
+            foreach (var item in options.SiteCollectorImplementTypes) {
+                if (provider.GetService(item) is ISuCaiFlowEngineSiteCollector collector)
+                    service.RegisterCollector(collector);
+            }
+            return service;
+        });
+
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<
+            IPostConfigureOptions<SuCaiFlowEngineOptions>, SuCaiFlowEngineConfiguration>());
+
+        return new SuCaiFlowEngineBuilder(builder.Services);
+    }
+
+    public static SuCaiFlowBuilder AddEngine(this SuCaiFlowBuilder builder, Action<SuCaiFlowEngineBuilder> configureOptions) {
+        configureOptions(builder.AddEngine());
+        return builder;
+    }
+}

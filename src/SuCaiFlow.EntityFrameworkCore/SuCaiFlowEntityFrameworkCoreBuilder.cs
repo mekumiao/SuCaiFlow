@@ -1,8 +1,13 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using SuCaiFlow.Abstractions;
+using SuCaiFlow.Engine;
+using SuCaiFlow.EntityFrameworkCore.Models;
 
 namespace SuCaiFlow.EntityFrameworkCore;
 
@@ -19,16 +24,29 @@ public class SuCaiFlowEntityFrameworkCoreBuilder(IServiceCollection services) {
         return this;
     }
 
-    //public SuCaiFlowEntityFrameworkCoreBuilder ReplaceDefaultEntities<
-    //    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TCollectionTask,
-    //    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TCollectedAsset,
-    //    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TCollectionTask>() {
-    //    Services.Replace(ServiceDescriptor.Scoped<ICollectionTaskService>(static provider =>
-    //        provider.GetRequiredService<CollectionTaskService>()));
-    //    Services.Replace(ServiceDescriptor.Scoped<ICollectedAssetService>(static provider =>
-    //        provider.GetRequiredService<CollectedAssetService>()));
-    //    return this;
-    //}
+    public SuCaiFlowEntityFrameworkCoreBuilder ReplaceDefaultEntities<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TTask,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TAsset,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey>()
+        where TTask : SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
+        where TAsset : SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
+        where TKey : notnull, IEquatable<TKey> {
+#if SUPPORTS_TYPE_DESCRIPTOR_TYPE_REGISTRATION
+        if (typeof(TKey) != typeof(string)) {
+            TypeDescriptor.RegisterType<TKey>();
+        }
+#endif
+        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowTaskManager>(static provider =>
+            provider.GetRequiredService<SuCaiFlowTaskManager<TTask>>()));
+        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowAssetManager>(static provider =>
+            provider.GetRequiredService<SuCaiFlowAssetManager<TAsset>>()));
+
+        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowTaskStore<TTask>>(static provider =>
+            provider.GetRequiredService<SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>>()));
+        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowAssetStore<TAsset>>(static provider =>
+            provider.GetRequiredService<SuCaiFlowEntityFrameworkCoreAssetStore<TAsset, TTask, TKey>>()));
+        return this;
+    }
 
     public SuCaiFlowEntityFrameworkCoreBuilder UseDbContext<TContext>()
         where TContext : DbContext {
