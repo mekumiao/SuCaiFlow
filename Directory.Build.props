@@ -1,9 +1,14 @@
 <Project>
   <PropertyGroup>
+    <LangVersion>preview</LangVersion>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
 
   <PropertyGroup>
     <PackagePrefix>Mekumiao</PackagePrefix>
@@ -24,10 +29,15 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <PackageOutputPath>../../nuget</PackageOutputPath>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)/nuget</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)/README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
 </Project>
