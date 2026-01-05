@@ -14,7 +14,7 @@ public class SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
     where TKey : notnull, IEquatable<TKey>
     where TTask : class {
 
-    public virtual required TKey Id { get; set; }
+    public virtual TKey? Id { get; set; }
 
     public virtual string? Name { get; set; }
 
@@ -31,8 +31,6 @@ public class SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
     public virtual string? ContentType { get; set; }
 
     public virtual long Size { get; set; }
-
-    public virtual TKey? TaskId { get; set; }
 
     public virtual TTask? Task { get; set; }
 

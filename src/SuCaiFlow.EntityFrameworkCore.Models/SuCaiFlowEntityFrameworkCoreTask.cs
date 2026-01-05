@@ -16,13 +16,21 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
     where TKey : notnull, IEquatable<TKey>
     where TAsset : class {
 
-    public virtual required TKey Id { get; set; }
+    public virtual TKey? Id { get; set; }
+
+    public virtual string? Name { get; set; }
 
     public virtual string? DisplayName { get; set; }
 
     public virtual string? Description { get; set; }
 
-    public virtual string? StartUri { get; set; }
+    public virtual string? SiteIdentifier { get; set; }
+
+    public virtual string? SearchKeywords { get; set; }
+
+    public virtual int TargetAssetQuantity { get; set; }
+
+    public virtual string? CustomUri { get; set; }
 
     public virtual string? Status { get; set; }
 

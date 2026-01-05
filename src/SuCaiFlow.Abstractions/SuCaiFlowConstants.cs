@@ -6,7 +6,7 @@ public static class SuCaiFlowConstants {
         public const string InProgress = "InProgress";
         public const string Completed = "Completed";
         public const string Failed = "Failed";
-        public const string Cancelled = "Cancelled";
+        public const string Canceled = "Canceled";
     }
 
     public static class DownloadStatuses {
