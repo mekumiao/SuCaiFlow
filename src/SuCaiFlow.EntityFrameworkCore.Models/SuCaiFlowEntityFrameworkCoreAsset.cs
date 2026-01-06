@@ -16,6 +16,8 @@ public class SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
 
     public virtual TKey? Id { get; set; }
 
+    public virtual int SerialNumber { get; set; }
+
     public virtual string? Name { get; set; }
 
     public virtual string? Title { get; set; }

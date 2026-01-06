@@ -23,4 +23,9 @@ public static class SuCaiFlowEntityFrameworkCoreExtensions {
 
         return new SuCaiFlowEntityFrameworkCoreBuilder(builder.Services);
     }
+
+    public static SuCaiFlowEngineBuilder UseEntityFrameworkCore(this SuCaiFlowEngineBuilder builder, Action<SuCaiFlowEntityFrameworkCoreBuilder> configureOptions) {
+        configureOptions(builder.UseEntityFrameworkCore());
+        return builder;
+    }
 }

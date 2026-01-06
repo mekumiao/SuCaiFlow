@@ -20,5 +20,6 @@
     <Project Path="src/SuCaiFlow.Engine/SuCaiFlow.Engine.csproj" />
     <Project Path="src/SuCaiFlow.EntityFrameworkCore.Models/SuCaiFlow.EntityFrameworkCore.Models.csproj" />
     <Project Path="src/SuCaiFlow.EntityFrameworkCore/SuCaiFlow.EntityFrameworkCore.csproj" />
+    <Project Path="src/SuCaiFlow.Playwright/SuCaiFlow.Playwright.csproj" />
   </Folder>
 </Solution>

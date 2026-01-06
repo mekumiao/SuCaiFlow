@@ -13,9 +13,9 @@ public interface ISuCaiFlowEngineSiteCollectorManager {
     /// <summary>
     /// 获取可以处理指定URL的站点采集器
     /// </summary>
-    /// <param name="url">要处理的URL</param>
+    /// <param name="uri">要处理的URL</param>
     /// <returns>站点采集器实例，如果找不到则返回null</returns>
-    ISuCaiFlowEngineSiteCollector? GetCollectorForUrl(string url);
+    ISuCaiFlowEngineSiteCollector? GetCollectorForUrl(Uri uri);
 
     /// <summary>
     /// 获取所有注册的站点采集器

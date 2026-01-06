@@ -18,7 +18,7 @@ public partial class SuCaiFlowEngineService(
     HttpClient httpClient) {
     private readonly ILogger<SuCaiFlowEngineService> _logger = logger;
     private readonly ISuCaiFlowTaskManager _taskManager = taskManager;
-    private readonly ISuCaiFlowAssetManager _assetRepository = assetManager;
+    private readonly ISuCaiFlowAssetManager _assetManager = assetManager;
     private readonly ISuCaiFlowEngineSiteCollectorManager _siteCollectorManager = siteCollectorManager;
     private readonly ISuCaiFlowEngineEventPublisher _eventPublisher = eventPublisher;
     private readonly SuCaiFlowEngineTaskExecution _taskExecution = taskExecution;

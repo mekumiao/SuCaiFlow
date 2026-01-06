@@ -19,18 +19,18 @@ public class SuCaiFlowEngineSiteCollectorManager(ILogger<SuCaiFlowEngineSiteColl
 
         _collectors.Add(collector);
         if (_logger.IsEnabled(LogLevel.Information))
-            _logger.LogInformation("注册了采集器: {SiteIdentifier} ({DisplayName})", collector.SiteIdentifier, collector.DisplayName);
+            _logger.LogInformation("注册了采集器: {SiteIdentifier}", collector.SiteIdentifier);
     }
 
-    public ISuCaiFlowEngineSiteCollector? GetCollectorForUrl(string url) {
-        var collector = _collectors.FirstOrDefault(c => c.CanHandle(url));
+    public ISuCaiFlowEngineSiteCollector? GetCollectorForUrl(Uri uri) {
+        var collector = _collectors.FirstOrDefault(c => c.CanHandle(uri));
         if (collector != null) {
             if (_logger.IsEnabled(LogLevel.Debug))
-                _logger.LogDebug("为URL {Url} 找到采集器: {SiteIdentifier}", url, collector.SiteIdentifier);
+                _logger.LogDebug("为URL {Url} 找到采集器: {SiteIdentifier}", uri, collector.SiteIdentifier);
         }
         else {
             if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning("未找到可以处理URL {Url} 的采集器", url);
+                _logger.LogWarning("未找到可以处理URL {Url} 的采集器", uri);
         }
         return collector;
     }
