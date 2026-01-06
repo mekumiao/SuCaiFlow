@@ -17,7 +17,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskConfiguration<TTask, TAsset, Tkey>
         builder.Property(e => e.Description).HasMaxLength(1000);
         builder.Property(e => e.SiteIdentifier).HasMaxLength(200);
         builder.Property(e => e.SearchKeywords).HasMaxLength(500);
-        builder.Property(e => e.CustomUri).HasMaxLength(500);
+        builder.Property(e => e.StartUrl).HasMaxLength(500);
         builder.Property(e => e.Status).HasMaxLength(50);
         builder.Property(e => e.ErrorMessage).HasMaxLength(1000);
 

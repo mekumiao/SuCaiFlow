@@ -9,7 +9,9 @@ public class SuCaiFlowAssetDescriptor {
 
     public string? Description { get; set; }
 
-    public Uri? OriginalUri { get; set; }
+    public string? OriginalUrl { get; set; }
+
+    public string? LandingUrl { get; set; }
 
     public string? StorageName { get; set; }
 
@@ -17,9 +19,13 @@ public class SuCaiFlowAssetDescriptor {
 
     public long Size { get; set; }
 
-    public DateTimeOffset? CreatedAt { get; set; }
-
     public DateTimeOffset? DownloadedAt { get; set; }
 
+    /// <summary>
+    /// 状态
+    /// </summary>
+    /// <remarks>
+    /// <see cref="SuCaiFlowConstants.DownloadStatuses"/>
+    /// </remarks>
     public string? Status { get; set; }
 }

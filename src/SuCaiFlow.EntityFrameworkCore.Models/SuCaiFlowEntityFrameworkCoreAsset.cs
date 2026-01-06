@@ -26,7 +26,9 @@ public class SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
 
     public virtual string? Description { get; set; }
 
-    public virtual string? OriginalUri { get; set; }
+    public virtual string? OriginalUrl { get; set; }
+
+    public virtual string? LandingUrl { get; set; }
 
     public virtual string? StorageName { get; set; }
 

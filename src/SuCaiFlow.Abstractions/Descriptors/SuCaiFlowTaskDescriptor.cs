@@ -5,10 +5,16 @@ namespace SuCaiFlow.Abstractions;
 public class SuCaiFlowTaskDescriptor {
     public string? TaskId { get; set; }
 
-    public string? DisplayName { get; set; }
+    public string? SearchKeywords { get; set; }
 
-    public Uri? StartUri { get; set; }
+    public string? StartUrl { get; set; }
 
+    /// <summary>
+    /// 状态
+    /// </summary>
+    /// <remarks>
+    /// <see cref="SuCaiFlowConstants.TaskStatuses"/>
+    /// </remarks>
     public string? Status { get; set; }
 
     public DateTimeOffset? CreatedAt { get; set; }

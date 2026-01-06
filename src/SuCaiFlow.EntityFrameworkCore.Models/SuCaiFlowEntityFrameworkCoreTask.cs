@@ -30,7 +30,7 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual int TargetAssetQuantity { get; set; }
 
-    public virtual string? CustomUri { get; set; }
+    public virtual string? StartUrl { get; set; }
 
     public virtual string? Status { get; set; }
 
