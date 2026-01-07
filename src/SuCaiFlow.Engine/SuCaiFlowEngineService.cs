@@ -73,7 +73,7 @@ public partial class SuCaiFlowEngineService(
                 await _eventPublisher.PublishAsync(new SuCaiFlowTaskCompletedEvent {
                     TaskId = descriptor.TaskId,
                     AssetsCollectedCount = descriptor.AssetsCollectedCount,
-                    TotalAssetsExpected = descriptor.TotalAssetsExpected,
+                    TotalAssetsExpected = descriptor.AssetsToCollectCount,
                     Status = descriptor.Status
                 }, cancellationToken);
 
@@ -87,7 +87,7 @@ public partial class SuCaiFlowEngineService(
                 await _eventPublisher.PublishAsync(new SuCaiFlowTaskCanceledEvent {
                     TaskId = descriptor.TaskId,
                     AssetsCollectedCount = descriptor.AssetsCollectedCount,
-                    TotalAssetsExpected = descriptor.TotalAssetsExpected,
+                    TotalAssetsExpected = descriptor.AssetsToCollectCount,
                 }, cancellationToken);
             }
             catch (Exception ex) {
@@ -110,7 +110,6 @@ public partial class SuCaiFlowEngineService(
         CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(task.SiteIdentifier);
 
-        var semaphore = new SemaphoreSlim(10);
         var channel = Channel.CreateBounded<SuCaiFlowAssetDescriptor>(1000);
         var collector = _siteCollectorManager.GetCollectorByIdentifier(task.SiteIdentifier)
             ?? throw new InvalidOperationException($"未找到标识为 {task.SiteIdentifier} 的采集站实现类 ISuCaiFlowEngineSiteCollector");
@@ -124,7 +123,6 @@ public partial class SuCaiFlowEngineService(
             var downloadingTask = Task.Run(async () => await ProcessAssetsDownloadsAsync(
                 channel,
                 collector,
-                semaphore,
                 cancellationToken), cancellationToken);
 
             await Task.WhenAll(parsingTask, downloadingTask);
@@ -148,12 +146,12 @@ public partial class SuCaiFlowEngineService(
         var assetManager = scope.ServiceProvider.GetRequiredService<ISuCaiFlowAssetManager>();
 
         try {
-            while (descriptor.AssetsCollectedCount < descriptor.TotalAssetsExpected) {
+            while (descriptor.AssetsCollectedCount < descriptor.AssetsToCollectCount) {
                 var assetDescriptors = await collector.ParsePageAsync(descriptor, currentPage, cancellationToken);
 
                 if (!assetDescriptors.Any()) break;
 
-                await assetManager.CreateAsync(assetDescriptors, cancellationToken);
+                await assetManager.CreateRangeAsync(assetDescriptors, cancellationToken);
 
                 foreach (var item in assetDescriptors) {
                     await channel.Writer.WriteAsync(item, cancellationToken);
@@ -176,12 +174,12 @@ public partial class SuCaiFlowEngineService(
     private static async Task ProcessAssetsDownloadsAsync(
         Channel<SuCaiFlowAssetDescriptor> channel,
         ISuCaiFlowEngineSiteCollector collector,
-        SemaphoreSlim semaphore,
         CancellationToken cancellationToken) {
+        var semaphore = new SemaphoreSlim(10);
         await Task.Run(async () => {
             await foreach (var item in channel.Reader.ReadAllAsync(cancellationToken)) {
+                await semaphore.WaitAsync(cancellationToken);
                 try {
-                    await semaphore.WaitAsync(cancellationToken);
                     await collector.DownloadAssetAsync(item, cancellationToken);
                 }
                 finally {

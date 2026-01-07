@@ -7,6 +7,7 @@ public interface ISuCaiFlowAssetManager {
     ValueTask<object> CreateAsync(SuCaiFlowAssetDescriptor descriptor, CancellationToken cancellationToken = default);
     ValueTask CreateAsync(object asset, CancellationToken cancellationToken = default);
     ValueTask<IEnumerable<object>> CreateRangeAsync(IEnumerable<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken = default);
+    ValueTask CreateRangeAsync(IEnumerable<object> assets, CancellationToken cancellationToken = default);
     ValueTask DeleteAsync(object asset, CancellationToken cancellationToken = default);
     ValueTask PopulateAsync(SuCaiFlowAssetDescriptor descriptor, object asset, CancellationToken cancellationToken = default);
     ValueTask PopulateAsync(object asset, SuCaiFlowAssetDescriptor descriptor, CancellationToken cancellationToken = default);

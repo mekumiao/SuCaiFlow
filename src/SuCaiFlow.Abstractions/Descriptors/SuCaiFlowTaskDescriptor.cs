@@ -5,6 +5,8 @@ namespace SuCaiFlow.Abstractions;
 public class SuCaiFlowTaskDescriptor {
     public string? TaskId { get; set; }
 
+    public string? Name { get; set; }
+
     public string? SearchKeywords { get; set; }
 
     public string? StartUrl { get; set; }
@@ -31,7 +33,7 @@ public class SuCaiFlowTaskDescriptor {
 
     public int AssetsCollectedCount { get; set; }
 
-    public int TotalAssetsExpected { get; set; }
+    public int AssetsToCollectCount { get; set; }
 
     public Dictionary<string, JsonElement> Parameters { get; } = new(StringComparer.Ordinal);
 }

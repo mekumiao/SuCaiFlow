@@ -19,6 +19,7 @@ public interface ISuCaiFlowTaskStore<TTask> where TTask : class {
     ValueTask<TTask?> FindByIdAsync(string identifier, CancellationToken cancellationToken);
     IAsyncEnumerable<TTask> FindByStatusAsync(string status, CancellationToken cancellationToken);
 
+    ValueTask SetNameAsync(TTask task, string? name, CancellationToken cancellationToken);
     ValueTask SetSearchKeywordsAsync(TTask task, string? searchKeywords, CancellationToken cancellationToken);
     ValueTask SetStartUrlAsync(TTask task, string? startUrl, CancellationToken cancellationToken);
     ValueTask SetSiteIdentifierAsync(TTask task, string? siteIdentifier, CancellationToken cancellationToken);
@@ -27,12 +28,13 @@ public interface ISuCaiFlowTaskStore<TTask> where TTask : class {
     ValueTask SetCreatedAtAsync(TTask task, DateTimeOffset? date, CancellationToken cancellationToken);
     ValueTask SetStartedAtAsync(TTask task, DateTimeOffset? date, CancellationToken cancellationToken);
     ValueTask SetCompletedAtAsync(TTask task, DateTimeOffset? date, CancellationToken cancellationToken);
-    ValueTask SetAssetsCollectedCountAsync(TTask task, int total, CancellationToken cancellationToken);
-    ValueTask SetAssetsDownloadCountAsync(TTask task, int total, CancellationToken cancellationToken);
-    ValueTask SetTotalAssetsExpectedAsync(TTask task, int total, CancellationToken cancellationToken);
+    ValueTask SetAssetsCollectedCountAsync(TTask task, int count, CancellationToken cancellationToken);
+    ValueTask SetAssetsDownloadCountAsync(TTask task, int count, CancellationToken cancellationToken);
+    ValueTask SetAssetsToCollectCountAsync(TTask task, int count, CancellationToken cancellationToken);
     ValueTask SetParametersAsync(TTask task, ImmutableDictionary<string, JsonElement> parameters, CancellationToken cancellationToken);
 
     ValueTask<string?> GetIdAsync(TTask task, CancellationToken cancellationToken);
+    ValueTask<string?> GetNameAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<string?> GetSearchKeywordsAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<string?> GetStartUrlAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<string?> GetSiteIdentifierAsync(TTask task, CancellationToken cancellationToken);
@@ -43,6 +45,6 @@ public interface ISuCaiFlowTaskStore<TTask> where TTask : class {
     ValueTask<DateTimeOffset?> GetCompletedAtAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<int> GetAssetsCollectedCountAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<int> GetAssetsDownloadCountAsync(TTask task, CancellationToken cancellationToken);
-    ValueTask<int> GetTotalAssetsExpectedAsync(TTask task, CancellationToken cancellationToken);
+    ValueTask<int> GetAssetsToCollectCountAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<ImmutableDictionary<string, JsonElement>> GetParametersAsync(TTask task, CancellationToken cancellationToken);
 }

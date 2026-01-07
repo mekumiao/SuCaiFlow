@@ -24,6 +24,11 @@ public class SuCaiFlowEntityFrameworkCoreBuilder(IServiceCollection services) {
         return this;
     }
 
+    public SuCaiFlowEntityFrameworkCoreBuilder ReplaceDefaultEntities<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TKey>()
+         where TKey : notnull, IEquatable<TKey> {
+        return ReplaceDefaultEntities<SuCaiFlowEntityFrameworkCoreTask<TKey>, SuCaiFlowEntityFrameworkCoreAsset<TKey>, TKey>();
+    }
+
     public SuCaiFlowEntityFrameworkCoreBuilder ReplaceDefaultEntities<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TTask,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TAsset,
@@ -41,10 +46,10 @@ public class SuCaiFlowEntityFrameworkCoreBuilder(IServiceCollection services) {
         Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowAssetManager>(static provider =>
             provider.GetRequiredService<SuCaiFlowAssetManager<TAsset>>()));
 
-        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowTaskStore<TTask>>(static provider =>
-            provider.GetRequiredService<SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>>()));
-        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowAssetStore<TAsset>>(static provider =>
-            provider.GetRequiredService<SuCaiFlowEntityFrameworkCoreAssetStore<TAsset, TTask, TKey>>()));
+        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowTaskStore<TTask>,
+            SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>>());
+        Services.Replace(ServiceDescriptor.Scoped<ISuCaiFlowAssetStore<TAsset>,
+            SuCaiFlowEntityFrameworkCoreAssetStore<TAsset, TTask, TKey>>());
         return this;
     }
 

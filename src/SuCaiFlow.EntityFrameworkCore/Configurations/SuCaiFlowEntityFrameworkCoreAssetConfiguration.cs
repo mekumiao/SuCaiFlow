@@ -27,9 +27,9 @@ public class SuCaiFlowEntityFrameworkCoreAssetConfiguration<
             nameof(SuCaiFlowEntityFrameworkCoreAsset.Description));
 
         builder.Property(e => e.Name).HasMaxLength(500);
-        builder.Property(e => e.Title).HasMaxLength(500);
+        builder.Property(e => e.Title).HasMaxLength(2000);
         builder.Property(e => e.Status).HasMaxLength(50);
-        builder.Property(e => e.Description).HasMaxLength(1000);
+        builder.Property(e => e.Description).HasMaxLength(5000);
         builder.Property(e => e.OriginalUrl).HasMaxLength(2000);
         builder.Property(e => e.LandingUrl).HasMaxLength(2000);
         builder.Property(e => e.StorageName).HasMaxLength(500);

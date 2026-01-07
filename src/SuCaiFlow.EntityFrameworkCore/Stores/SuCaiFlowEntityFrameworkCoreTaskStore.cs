@@ -193,6 +193,12 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         return new(properties);
     }
 
+    public ValueTask<string?> GetNameAsync(TTask task, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(task);
+
+        return new(task.Name);
+    }
+
     public virtual ValueTask<string?> GetSearchKeywordsAsync(TTask task, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
@@ -233,10 +239,10 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         return new(ConvertIdentifierToString(entity.Id));
     }
 
-    public virtual ValueTask<int> GetTotalAssetsExpectedAsync(TTask task, CancellationToken cancellationToken) {
+    public virtual ValueTask<int> GetAssetsToCollectCountAsync(TTask task, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        return new(task.TotalAssetsExpected);
+        return new(task.AssetsToCollectCount);
     }
 
     public virtual ValueTask<TTask> InstantiateAsync(CancellationToken cancellationToken) {
@@ -280,18 +286,26 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         }
     }
 
-    public virtual ValueTask SetAssetsCollectedCountAsync(TTask task, int total, CancellationToken cancellationToken) {
+    public ValueTask SetNameAsync(TTask task, string? name, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.AssetsCollectedCount = total;
+        task.Name = name;
 
         return ValueTask.CompletedTask;
     }
 
-    public virtual ValueTask SetAssetsDownloadCountAsync(TTask task, int total, CancellationToken cancellationToken) {
+    public virtual ValueTask SetAssetsCollectedCountAsync(TTask task, int count, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.AssetsDownloadCount = total;
+        task.AssetsCollectedCount = count;
+
+        return ValueTask.CompletedTask;
+    }
+
+    public virtual ValueTask SetAssetsDownloadCountAsync(TTask task, int count, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.AssetsDownloadCount = count;
 
         return ValueTask.CompletedTask;
     }
@@ -390,10 +404,10 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         return ValueTask.CompletedTask;
     }
 
-    public virtual ValueTask SetTotalAssetsExpectedAsync(TTask task, int total, CancellationToken cancellationToken) {
+    public virtual ValueTask SetAssetsToCollectCountAsync(TTask task, int count, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.TotalAssetsExpected = total;
+        task.AssetsToCollectCount = count;
 
         return ValueTask.CompletedTask;
     }

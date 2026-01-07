@@ -28,8 +28,6 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual string? SearchKeywords { get; set; }
 
-    public virtual int TargetAssetQuantity { get; set; }
-
     public virtual string? StartUrl { get; set; }
 
     public virtual string? Status { get; set; }
@@ -44,7 +42,7 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual int AssetsCollectedCount { get; set; }
 
-    public virtual int TotalAssetsExpected { get; set; }
+    public virtual int AssetsToCollectCount { get; set; }
 
     public virtual string? ErrorMessage { get; set; }
 

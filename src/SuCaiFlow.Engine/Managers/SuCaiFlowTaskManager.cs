@@ -87,6 +87,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         ArgumentNullException.ThrowIfNull(task);
 
         descriptor.TaskId = await Store.GetIdAsync(task, cancellationToken);
+        descriptor.Name = await Store.GetNameAsync(task, cancellationToken);
         descriptor.SearchKeywords = await Store.GetSearchKeywordsAsync(task, cancellationToken);
         descriptor.StartUrl = await Store.GetStartUrlAsync(task, cancellationToken);
         descriptor.SiteIdentifier = await Store.GetSiteIdentifierAsync(task, cancellationToken);
@@ -97,7 +98,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         descriptor.CompletedAt = await Store.GetCompletedAtAsync(task, cancellationToken);
         descriptor.AssetsDownloadCount = await Store.GetAssetsDownloadCountAsync(task, cancellationToken);
         descriptor.AssetsCollectedCount = await Store.GetAssetsCollectedCountAsync(task, cancellationToken);
-        descriptor.TotalAssetsExpected = await Store.GetTotalAssetsExpectedAsync(task, cancellationToken);
+        descriptor.AssetsToCollectCount = await Store.GetAssetsToCollectCountAsync(task, cancellationToken);
 
         descriptor.Parameters.Clear();
         foreach (var pair in await Store.GetParametersAsync(task, cancellationToken)) {
@@ -109,6 +110,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         ArgumentNullException.ThrowIfNull(task);
         ArgumentNullException.ThrowIfNull(descriptor);
 
+        await Store.SetNameAsync(task, descriptor.Name, cancellationToken);
         await Store.SetSearchKeywordsAsync(task, descriptor.SearchKeywords, cancellationToken);
         await Store.SetStartUrlAsync(task, descriptor.StartUrl, cancellationToken);
         await Store.SetSiteIdentifierAsync(task, descriptor.SiteIdentifier, cancellationToken);
@@ -119,7 +121,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         await Store.SetCompletedAtAsync(task, descriptor.CompletedAt, cancellationToken);
         await Store.SetAssetsDownloadCountAsync(task, descriptor.AssetsDownloadCount, cancellationToken);
         await Store.SetAssetsCollectedCountAsync(task, descriptor.AssetsCollectedCount, cancellationToken);
-        await Store.SetTotalAssetsExpectedAsync(task, descriptor.TotalAssetsExpected, cancellationToken);
+        await Store.SetAssetsToCollectCountAsync(task, descriptor.AssetsToCollectCount, cancellationToken);
         await Store.SetParametersAsync(task, descriptor.Parameters.ToImmutableDictionary(), cancellationToken);
     }
 
