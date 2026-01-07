@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using SuCaiFlow.Abstractions;
@@ -11,78 +12,100 @@ public partial class SuCaiFlowEngineService(
     ILogger<SuCaiFlowEngineService> logger,
     ISuCaiFlowEngineSiteCollectorManager siteCollectorManager,
     ISuCaiFlowEngineEventPublisher eventPublisher,
+    IServiceScopeFactory scopeFactory,
     SuCaiFlowEngineConcurrencyExecutor executor,
     SuCaiFlowEngineTaskTracker tracker) {
     private readonly ILogger<SuCaiFlowEngineService> _logger = logger;
     private readonly ISuCaiFlowEngineSiteCollectorManager _siteCollectorManager = siteCollectorManager;
     private readonly ISuCaiFlowEngineEventPublisher _eventPublisher = eventPublisher;
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly SuCaiFlowEngineConcurrencyExecutor _executor = executor;
     private readonly SuCaiFlowEngineTaskTracker _tracker = tracker;
 
-    public async Task PushFlowTaskAsync(string taskId, CancellationToken cancellationToken) {
-        var (created, descriptor) = await _tracker.TryCreateAsync(taskId, async taskId => {
-            var task = new SuCaiFlowTaskDescriptor {
-                TaskId = taskId,
-                TotalAssetsExpected = 100,
-                CreatedAt = DateTime.UtcNow,
-                Status = SuCaiFlowConstants.TaskStatuses.Pending,
-                SiteIdentifier = "StockPhoto",
-                SearchKeywords = "cut",
-            };
-            return task;
-        });
+    public Task CreateFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
+        return CreateFlowTaskAsync(descriptor, true, cancellationToken);
+    }
 
-        if (!created) return;
+    public async Task CreateFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, bool pushOnCreated, CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.SiteIdentifier);
 
+        descriptor.Status = SuCaiFlowConstants.TaskStatuses.Pending;
+        descriptor.ErrorMessage = default;
+
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var flowTaskManager = scope.ServiceProvider.GetRequiredService<ISuCaiFlowTaskManager>();
+
+        var entity = await flowTaskManager.CreateAsync(descriptor, cancellationToken);
+        await flowTaskManager.PopulateAsync(descriptor, entity, cancellationToken);
+        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.TaskId);
+
+        if (pushOnCreated) {
+            await PushFlowTaskAsync(descriptor, cancellationToken);
+        }
+    }
+
+    public async Task PushFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
         ArgumentNullException.ThrowIfNull(descriptor);
+        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.TaskId);
+
+        if (!_tracker.TryAdd(descriptor)) return;
 
         await _executor.EnqueueAsync(async token => {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var taskManager = scope.ServiceProvider.GetRequiredService<ISuCaiFlowTaskManager>();
+
+            var taskEntity = await taskManager.FindByIdAsync(descriptor.TaskId, cancellationToken);
+            ArgumentNullException.ThrowIfNull(taskEntity);
+
             try {
-                _tracker.MarkRunning(taskId);
+                _tracker.MarkRunning(descriptor.TaskId);
+                await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
 
                 await _eventPublisher.PublishAsync(new SuCaiFlowTaskStartedEvent {
-                    TaskId = taskId,
+                    TaskId = descriptor.TaskId,
                 }, cancellationToken);
 
-                var assets = await ExecuteParallelCollectionAsync(descriptor, cancellationToken);
+                await ExecuteParallelCollectionAsync(descriptor, cancellationToken);
 
-                descriptor.AssetsCollectedCount = assets.Count;
-
-                _tracker.MarkCompleted(taskId);
+                _tracker.MarkCompleted(descriptor.TaskId);
+                await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
 
                 await _eventPublisher.PublishAsync(new SuCaiFlowTaskCompletedEvent {
-                    TaskId = taskId,
-                    AssetsCollectedCount = assets.Count,
+                    TaskId = descriptor.TaskId,
+                    AssetsCollectedCount = descriptor.AssetsCollectedCount,
                     TotalAssetsExpected = descriptor.TotalAssetsExpected,
                     Status = descriptor.Status
                 }, cancellationToken);
 
                 if (_logger.IsEnabled(LogLevel.Information))
-                    _logger.LogInformation("Completed collection task {TaskId}, collected {AssetCount} assets", taskId, assets.Count);
+                    _logger.LogInformation("Completed collection task {TaskId}, collected {AssetCount} assets", descriptor.TaskId, descriptor.AssetsCollectedCount);
             }
             catch (OperationCanceledException) {
-                _tracker.MarkCanceled(taskId);
+                _tracker.MarkCanceled(descriptor.TaskId);
+                await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+
                 await _eventPublisher.PublishAsync(new SuCaiFlowTaskCanceledEvent {
-                    TaskId = taskId,
+                    TaskId = descriptor.TaskId,
                     AssetsCollectedCount = descriptor.AssetsCollectedCount,
                     TotalAssetsExpected = descriptor.TotalAssetsExpected,
                 }, cancellationToken);
             }
             catch (Exception ex) {
                 if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Error processing collection task {TaskId}", taskId);
+                    _logger.LogError(ex, "Error processing collection task {TaskId}", descriptor.TaskId);
 
-                _tracker.MarkFailed(taskId, ex.Message);
+                _tracker.MarkFailed(descriptor.TaskId, ex.Message);
+                await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
 
                 await _eventPublisher.PublishAsync(new SuCaiFlowTaskFailedEvent {
-                    TaskId = taskId,
+                    TaskId = descriptor.TaskId,
                     ErrorMessage = ex.Message
                 }, cancellationToken);
             }
         }, cancellationToken);
     }
 
-    private async Task<List<SuCaiFlowAssetDescriptor>> ExecuteParallelCollectionAsync(
+    private async Task ExecuteParallelCollectionAsync(
         SuCaiFlowTaskDescriptor task,
         CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(task.SiteIdentifier);
@@ -105,8 +128,6 @@ public partial class SuCaiFlowEngineService(
                 cancellationToken), cancellationToken);
 
             await Task.WhenAll(parsingTask, downloadingTask);
-
-            return parsingTask.Result;
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
@@ -115,14 +136,16 @@ public partial class SuCaiFlowEngineService(
         }
     }
 
-    private async Task<List<SuCaiFlowAssetDescriptor>> ParsePagesWithPaginationAsync(
+    private async Task ParsePagesWithPaginationAsync(
         SuCaiFlowTaskDescriptor descriptor,
         Channel<SuCaiFlowAssetDescriptor> channel,
         ISuCaiFlowEngineSiteCollector collector,
         CancellationToken cancellationToken) {
         var currentPage = 1;
         var requestDelayMs = 1000;
-        var list = new List<SuCaiFlowAssetDescriptor>();
+
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var assetManager = scope.ServiceProvider.GetRequiredService<ISuCaiFlowAssetManager>();
 
         try {
             while (descriptor.AssetsCollectedCount < descriptor.TotalAssetsExpected) {
@@ -130,8 +153,9 @@ public partial class SuCaiFlowEngineService(
 
                 if (!assetDescriptors.Any()) break;
 
+                await assetManager.CreateAsync(assetDescriptors, cancellationToken);
+
                 foreach (var item in assetDescriptors) {
-                    list.Add(item);
                     await channel.Writer.WriteAsync(item, cancellationToken);
                     descriptor.AssetsCollectedCount++;
                 }
@@ -141,7 +165,6 @@ public partial class SuCaiFlowEngineService(
                 await Task.Delay(requestDelayMs, cancellationToken);
             }
             channel.Writer.Complete();
-            return list;
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))

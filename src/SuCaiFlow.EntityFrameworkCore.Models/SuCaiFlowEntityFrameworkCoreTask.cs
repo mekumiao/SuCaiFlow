@@ -42,6 +42,8 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual int AssetsDownloadCount { get; set; }
 
+    public virtual int AssetsCollectedCount { get; set; }
+
     public virtual int TotalAssetsExpected { get; set; }
 
     public virtual string? ErrorMessage { get; set; }

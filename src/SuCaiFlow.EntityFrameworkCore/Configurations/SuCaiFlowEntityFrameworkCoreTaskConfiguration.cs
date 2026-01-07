@@ -21,6 +21,12 @@ public class SuCaiFlowEntityFrameworkCoreTaskConfiguration<TTask, TAsset, Tkey>
         builder.Property(e => e.Status).HasMaxLength(50);
         builder.Property(e => e.ErrorMessage).HasMaxLength(1000);
 
+        builder.Property(e => e.Id)
+               .ValueGeneratedOnAdd();
+
+        builder.HasIndex(e => e.Name)
+               .IsUnique();
+
         builder.Property(e => e.ConcurrencyToken)
                .HasMaxLength(50)
                .IsConcurrencyToken();

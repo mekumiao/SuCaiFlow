@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -48,5 +49,17 @@ public static class SuCaiFlowEntityFrameworkCoreHelpers {
         return builder
             .ApplyConfiguration(new SuCaiFlowEntityFrameworkCoreTaskConfiguration<TTask, TAsset, TKey>())
             .ApplyConfiguration(new SuCaiFlowEntityFrameworkCoreAssetConfiguration<TAsset, TTask, TKey>());
+    }
+
+    internal static IAsyncEnumerable<T> AsAsyncEnumerable<T>(this IQueryable<T> source, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return ExecuteAsync(source, cancellationToken);
+
+        static async IAsyncEnumerable<T> ExecuteAsync(IQueryable<T> source, [EnumeratorCancellation] CancellationToken cancellationToken) {
+            await foreach (var element in source.AsAsyncEnumerable().WithCancellation(cancellationToken)) {
+                yield return element;
+            }
+        }
     }
 }

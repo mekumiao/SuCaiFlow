@@ -27,6 +27,8 @@ public class SuCaiFlowTaskDescriptor {
 
     public DateTimeOffset? CompletedAt { get; set; }
 
+    public int AssetsDownloadCount { get; set; }
+
     public int AssetsCollectedCount { get; set; }
 
     public int TotalAssetsExpected { get; set; }

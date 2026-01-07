@@ -19,6 +19,13 @@ public class SuCaiFlowEntityFrameworkCoreAssetConfiguration<
     where TKey : notnull, IEquatable<TKey> {
     public void Configure(EntityTypeBuilder<TAsset> builder) {
         builder.HasKey(e => e.Id);
+
+        builder.HasIndex(nameof(SuCaiFlowEntityFrameworkCoreAsset.Task) + nameof(SuCaiFlowEntityFrameworkCoreTask.Id),
+            nameof(SuCaiFlowEntityFrameworkCoreAsset.Name),
+            nameof(SuCaiFlowEntityFrameworkCoreAsset.Title),
+            nameof(SuCaiFlowEntityFrameworkCoreAsset.Status),
+            nameof(SuCaiFlowEntityFrameworkCoreAsset.Description));
+
         builder.Property(e => e.Name).HasMaxLength(500);
         builder.Property(e => e.Title).HasMaxLength(500);
         builder.Property(e => e.Status).HasMaxLength(50);
@@ -28,6 +35,9 @@ public class SuCaiFlowEntityFrameworkCoreAssetConfiguration<
         builder.Property(e => e.StorageName).HasMaxLength(500);
         builder.Property(e => e.ContentType).HasMaxLength(100);
         builder.Property(e => e.ErrorMessage).HasMaxLength(1000);
+
+        builder.Property(e => e.Id)
+               .ValueGeneratedOnAdd();
 
         builder.Property(e => e.ConcurrencyToken)
                .HasMaxLength(50)
