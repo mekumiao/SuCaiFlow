@@ -19,7 +19,7 @@ public partial class SuCaiFlowEngineService(
     private readonly SuCaiFlowEngineConcurrencyExecutor _executor = executor;
     private readonly SuCaiFlowEngineTaskTracker _tracker = tracker;
 
-    public async Task StartFlowTaskAsync(string taskId, CancellationToken cancellationToken) {
+    public async Task PushFlowTaskAsync(string taskId, CancellationToken cancellationToken) {
         var (created, descriptor) = await _tracker.TryCreateAsync(taskId, async taskId => {
             var task = new SuCaiFlowTaskDescriptor {
                 TaskId = taskId,

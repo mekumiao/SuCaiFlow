@@ -23,7 +23,7 @@ public static class SuCaiFlowEngineExtensions {
         builder.Services.TryAddScoped<ISuCaiFlowAssetManager>(static provider =>
             throw new InvalidOperationException());
 
-        builder.Services.TryAddSingleton<SuCaiFlowEngineService>();
+        builder.Services.TryAddScoped<SuCaiFlowEngineService>();
         builder.Services.TryAddSingleton<SuCaiFlowEngineTaskTracker>();
         builder.Services.TryAddSingleton<SuCaiFlowEngineConcurrencyExecutor>();
         builder.Services.TryAddSingleton<SuCaiFlowEngineSiteCollectorManager>();
