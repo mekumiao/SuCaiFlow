@@ -18,12 +18,6 @@ public interface ISuCaiFlowEngineSiteCollectorManager {
     ISuCaiFlowEngineSiteCollector? GetCollectorForUrl(string url);
 
     /// <summary>
-    /// 获取所有注册的站点采集器
-    /// </summary>
-    /// <returns>所有站点采集器列表</returns>
-    IEnumerable<ISuCaiFlowEngineSiteCollector> GetAllCollectors();
-
-    /// <summary>
     /// 根据站点标识符获取采集器
     /// </summary>
     /// <param name="siteIdentifier">站点标识符</param>

@@ -9,6 +9,10 @@ public class SuCaiFlowTaskDescriptor {
 
     public string? StartUrl { get; set; }
 
+    public string? SiteIdentifier { get; set; }
+
+    public string? ErrorMessage { get; set; }
+
     /// <summary>
     /// 状态
     /// </summary>

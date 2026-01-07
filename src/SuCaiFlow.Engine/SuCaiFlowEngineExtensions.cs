@@ -23,11 +23,14 @@ public static class SuCaiFlowEngineExtensions {
         builder.Services.TryAddScoped<ISuCaiFlowAssetManager>(static provider =>
             throw new InvalidOperationException());
 
-        builder.Services.TryAddScoped<SuCaiFlowEngineTaskExecution>();
-        builder.Services.TryAddScoped<SuCaiFlowEngineService>();
-        builder.Services.TryAddScoped<ISuCaiFlowEngineEventPublisher, SuCaiFlowEngineDefaultEventPublisher>();
+        builder.Services.TryAddSingleton<SuCaiFlowEngineService>();
+        builder.Services.TryAddSingleton<SuCaiFlowEngineTaskTracker>();
+        builder.Services.TryAddSingleton<SuCaiFlowEngineConcurrencyExecutor>();
+        builder.Services.TryAddSingleton<SuCaiFlowEngineSiteCollectorManager>();
+        builder.Services.TryAddSingleton<ISuCaiFlowEngineEventPublisher, SuCaiFlowEngineDefaultEventPublisher>();
+        builder.Services.AddHostedService<SuCaiFlowEngineExecutorHostedService>();
 
-        builder.Services.TryAddScoped<ISuCaiFlowEngineSiteCollectorManager>(provider => {
+        builder.Services.TryAddSingleton<ISuCaiFlowEngineSiteCollectorManager>(provider => {
             var options = provider.GetRequiredService<IOptions<SuCaiFlowEngineOptions>>().Value;
             var service = provider.GetRequiredService<SuCaiFlowEngineSiteCollectorManager>();
             foreach (var item in options.SiteCollectorImplementTypes) {

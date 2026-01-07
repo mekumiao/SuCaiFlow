@@ -10,5 +10,5 @@ public interface ISuCaiFlowEngineSiteCollector {
 
     Task<IEnumerable<SuCaiFlowAssetDescriptor>> ParsePageAsync(SuCaiFlowTaskDescriptor descriptor, int pageNum, CancellationToken cancellationToken);
 
-    Task<SuCaiFlowAssetDescriptor> DownloadAssetAsync(string url, CancellationToken cancellationToken);
+    Task DownloadAssetAsync(SuCaiFlowAssetDescriptor descriptor, CancellationToken cancellationToken);
 }
