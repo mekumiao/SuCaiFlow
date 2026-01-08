@@ -149,13 +149,17 @@ public partial class SuCaiFlowEngineService(
             while (descriptor.AssetsCollectedCount < descriptor.AssetsToCollectCount) {
                 var assetDescriptors = await collector.ParsePageAsync(descriptor, currentPage, cancellationToken);
 
-                if (!assetDescriptors.Any()) break;
+                if (assetDescriptors.Count == 0) break;
+
+                foreach (var item in assetDescriptors) {
+                    collector.ParseStorageName(item);
+                    item.OrderNo = ++descriptor.AssetsCollectedCount;
+                }
 
                 await assetManager.CreateRangeAsync(assetDescriptors, cancellationToken);
 
                 foreach (var item in assetDescriptors) {
                     await channel.Writer.WriteAsync(item, cancellationToken);
-                    descriptor.AssetsCollectedCount++;
                 }
 
                 currentPage++;

@@ -223,6 +223,12 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         return new(asset.Title);
     }
 
+    public ValueTask<int> GetOrderNoAsync(TAsset asset, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(asset);
+
+        return new(asset.OrderNo);
+    }
+
     public virtual ValueTask<TAsset> InstantiateAsync(CancellationToken cancellationToken) {
         try {
             return new(Activator.CreateInstance<TAsset>());
@@ -364,6 +370,14 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         ArgumentNullException.ThrowIfNull(asset);
 
         asset.Title = title;
+
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask SetOrderNoAsync(TAsset asset, int no, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(asset);
+
+        asset.OrderNo = no;
 
         return ValueTask.CompletedTask;
     }

@@ -8,7 +8,9 @@ public interface ISuCaiFlowEngineSiteCollector {
 
     bool CanHandle(string url);
 
-    Task<IEnumerable<SuCaiFlowAssetDescriptor>> ParsePageAsync(SuCaiFlowTaskDescriptor descriptor, int pageNum, CancellationToken cancellationToken);
+    void ParseStorageName(SuCaiFlowAssetDescriptor assetDescriptor);
+
+    Task<List<SuCaiFlowAssetDescriptor>> ParsePageAsync(SuCaiFlowTaskDescriptor descriptor, int pageNum, CancellationToken cancellationToken);
 
     Task DownloadAssetAsync(SuCaiFlowAssetDescriptor descriptor, CancellationToken cancellationToken);
 }

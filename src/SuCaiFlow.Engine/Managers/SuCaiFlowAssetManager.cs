@@ -105,6 +105,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         ArgumentNullException.ThrowIfNull(asset);
 
         descriptor.TaskId = await Store.GetTaskIdAsync(asset, cancellationToken);
+        descriptor.OrderNo = await Store.GetOrderNoAsync(asset, cancellationToken);
         descriptor.Name = await Store.GetNameAsync(asset, cancellationToken);
         descriptor.Title = await Store.GetTitleAsync(asset, cancellationToken);
         descriptor.Description = await Store.GetDescriptionAsync(asset, cancellationToken);
@@ -122,6 +123,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         ArgumentNullException.ThrowIfNull(descriptor);
 
         await Store.SetTaskIdAsync(asset, descriptor.TaskId, cancellationToken);
+        await Store.SetOrderNoAsync(asset, descriptor.OrderNo, cancellationToken);
         await Store.SetNameAsync(asset, descriptor.Name, cancellationToken);
         await Store.SetTitleAsync(asset, descriptor.Title, cancellationToken);
         await Store.SetDescriptionAsync(asset, descriptor.Description, cancellationToken);

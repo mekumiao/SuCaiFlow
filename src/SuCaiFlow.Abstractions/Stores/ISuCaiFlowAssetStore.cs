@@ -18,6 +18,7 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
     IAsyncEnumerable<TAsset> FindByStatusAsync(string status, CancellationToken cancellationToken);
 
     ValueTask SetTaskIdAsync(TAsset asset, string? identifier, CancellationToken cancellationToken);
+    ValueTask SetOrderNoAsync(TAsset asset, int no, CancellationToken cancellationToken);
     ValueTask SetNameAsync(TAsset asset, string? name, CancellationToken cancellationToken);
     ValueTask SetTitleAsync(TAsset asset, string? title, CancellationToken cancellationToken);
     ValueTask SetDescriptionAsync(TAsset asset, string? description, CancellationToken cancellationToken);
@@ -31,6 +32,7 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
 
     ValueTask<string?> GetIdAsync(TAsset token, CancellationToken cancellationToken);
     ValueTask<string?> GetTaskIdAsync(TAsset asset, CancellationToken cancellationToken);
+    ValueTask<int> GetOrderNoAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetNameAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetTitleAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetDescriptionAsync(TAsset asset, CancellationToken cancellationToken);

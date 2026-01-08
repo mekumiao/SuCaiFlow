@@ -3,6 +3,8 @@ namespace SuCaiFlow.Abstractions;
 public class SuCaiFlowAssetDescriptor {
     public string? TaskId { get; set; }
 
+    public int OrderNo { get; set; }
+
     public string? Name { get; set; }
 
     public string? Title { get; set; }
