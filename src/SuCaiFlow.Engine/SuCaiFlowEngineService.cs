@@ -167,7 +167,7 @@ public partial class SuCaiFlowEngineService(
 
                 await Task.Delay(requestDelayMs, cancellationToken);
             }
-            channel.Writer.Complete();
+            channel.Writer.TryComplete();
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
