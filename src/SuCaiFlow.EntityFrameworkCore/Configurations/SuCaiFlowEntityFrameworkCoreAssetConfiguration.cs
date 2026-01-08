@@ -34,7 +34,6 @@ public class SuCaiFlowEntityFrameworkCoreAssetConfiguration<
         builder.Property(e => e.LandingUrl).HasMaxLength(2000);
         builder.Property(e => e.StorageName).HasMaxLength(500);
         builder.Property(e => e.ContentType).HasMaxLength(100);
-        builder.Property(e => e.ErrorMessage).HasMaxLength(1000);
 
         builder.Property(e => e.Id)
                .ValueGeneratedOnAdd();

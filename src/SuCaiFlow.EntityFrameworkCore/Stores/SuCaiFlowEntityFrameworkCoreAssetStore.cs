@@ -281,7 +281,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
     public virtual ValueTask SetDescriptionAsync(TAsset asset, string? description, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.Description = description;
+        asset.Description = description?[..5000];
 
         return ValueTask.CompletedTask;
     }
@@ -297,7 +297,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
     public virtual ValueTask SetLandingUrlAsync(TAsset asset, string? landingUrl, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.LandingUrl = landingUrl;
+        asset.LandingUrl = landingUrl?[..2000];
 
         return ValueTask.CompletedTask;
     }
@@ -305,7 +305,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
     public virtual ValueTask SetNameAsync(TAsset asset, string? name, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.Name = name;
+        asset.Name = name?[..500];
 
         return ValueTask.CompletedTask;
     }
@@ -313,7 +313,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
     public virtual ValueTask SetOriginalUrlAsync(TAsset asset, string? originalUrl, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.OriginalUrl = originalUrl;
+        asset.OriginalUrl = originalUrl?[..2000];
 
         return ValueTask.CompletedTask;
     }
@@ -369,7 +369,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
     public virtual ValueTask SetTitleAsync(TAsset asset, string? title, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.Title = title;
+        asset.Title = title?[..2000];
 
         return ValueTask.CompletedTask;
     }

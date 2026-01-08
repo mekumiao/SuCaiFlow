@@ -42,7 +42,5 @@ public class SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
 
     public virtual DateTime? DownloadedAt { get; set; }
 
-    public virtual string? ErrorMessage { get; set; }
-
     public virtual string? ConcurrencyToken { get; set; } = Guid.NewGuid().ToString();
 }
