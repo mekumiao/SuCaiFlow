@@ -29,6 +29,7 @@ public partial class SuCaiFlowEngineService(
     public async Task CreateFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, bool pushOnCreated, CancellationToken cancellationToken = default) {
         ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.SiteIdentifier);
 
+        descriptor.CreatedAt = DateTimeOffset.UtcNow;
         descriptor.Status = SuCaiFlowConstants.TaskStatuses.Pending;
         descriptor.ErrorMessage = default;
 
