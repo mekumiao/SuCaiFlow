@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace SuCaiFlow.Engine;
 
-public sealed class SuCaiFlowEngineConcurrencyExecutor : IAsyncDisposable {
+public sealed class SuCaiFlowEngineConcurrencyExecutor : IDisposable {
     private readonly Channel<QueuedWork> _channel;
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _pending = new();
     private readonly ConcurrentDictionary<int, CancellationTokenSource> _workers = new();
@@ -137,11 +137,13 @@ public sealed class SuCaiFlowEngineConcurrencyExecutor : IAsyncDisposable {
         }
     }
 
-    public async ValueTask DisposeAsync() {
-        _channel.Writer.Complete();
+    public void Dispose() {
+        _channel.Writer.TryComplete();
 
-        foreach (var worker in _workers.Values)
+        foreach (var worker in _workers.Values) {
             worker.Cancel();
+            worker.Dispose();
+        }
 
         foreach (var cts in _pending.Values) {
             cts.Cancel();
@@ -150,8 +152,6 @@ public sealed class SuCaiFlowEngineConcurrencyExecutor : IAsyncDisposable {
 
         _pending.Clear();
         _workers.Clear();
-
-        await Task.CompletedTask;
     }
 
     private sealed record QueuedWork(

@@ -61,14 +61,14 @@ await collectionTaskService.StartCollectionTaskAsync(taskId);
 
 ## 核心组件
 
-### Contracts
+### Abstractions
 
 包含所有实体和接口定义:
 
 - 实体: CollectionTask, CollectedAsset, CollectionTaskConfig
 - 接口: ICollectionTaskService, IAssetService, ISiteCollector 等
 
-### Core
+### Engine
 
 包含业务逻辑实现:
 
@@ -76,13 +76,17 @@ await collectionTaskService.StartCollectionTaskAsync(taskId);
 - 基础类: BaseSiteCollector
 - 扩展方法: SuCaiFlowExtensions
 
-### EntityFramework
+### EntityFrameworkCore
 
 包含数据访问实现:
 
 - DbContext: SuCaiFlowDbContext
 - 仓储: CollectionTaskRepository, AssetRepository
 - EF Core 扩展方法
+
+## 注意事项
+
+1. 由于采集功能用到了`SuCaiFlow.Playwright`，所以部署到linux服务器时，需要给node执行权限`.playwright/node/linux-x64/node`
 
 ## 扩展功能
 

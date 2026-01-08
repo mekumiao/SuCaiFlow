@@ -11,7 +11,7 @@ internal sealed class SuCaiFlowEngineExecutorHostedService(SuCaiFlowEngineConcur
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken) {
-        await _executor.DisposeAsync();
+        _executor.Dispose();
         await base.StopAsync(cancellationToken);
     }
 }
