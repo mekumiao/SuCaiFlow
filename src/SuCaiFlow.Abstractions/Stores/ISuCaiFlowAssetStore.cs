@@ -28,7 +28,8 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
     ValueTask SetContentTypeAsync(TAsset asset, string? contentType, CancellationToken cancellationToken);
     ValueTask SetStatusAsync(TAsset asset, string? status, CancellationToken cancellationToken);
     ValueTask SetSizeAsync(TAsset asset, long size, CancellationToken cancellationToken);
-    ValueTask SetDownloadedAtAsync(TAsset asset, DateTimeOffset? downloadAt, CancellationToken cancellationToken);
+    ValueTask SetCreatedAtAsync(TAsset asset, DateTimeOffset? date, CancellationToken cancellationToken);
+    ValueTask SetDownloadedAtAsync(TAsset asset, DateTimeOffset? date, CancellationToken cancellationToken);
 
     ValueTask<string?> GetIdAsync(TAsset token, CancellationToken cancellationToken);
     ValueTask<string?> GetTaskIdAsync(TAsset asset, CancellationToken cancellationToken);
@@ -42,5 +43,6 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
     ValueTask<string?> GetContentTypeAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetStatusAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<long> GetSizeAsync(TAsset asset, CancellationToken cancellationToken);
+    ValueTask<DateTimeOffset?> GetCreatedAtAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<DateTimeOffset?> GetDownloadedAtAsync(TAsset asset, CancellationToken cancellationToken);
 }

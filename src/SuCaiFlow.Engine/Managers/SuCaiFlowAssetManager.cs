@@ -115,6 +115,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         descriptor.ContentType = await Store.GetContentTypeAsync(asset, cancellationToken);
         descriptor.Status = await Store.GetStatusAsync(asset, cancellationToken);
         descriptor.Size = await Store.GetSizeAsync(asset, cancellationToken);
+        descriptor.CreatedAt = await Store.GetCreatedAtAsync(asset, cancellationToken);
         descriptor.DownloadedAt = await Store.GetDownloadedAtAsync(asset, cancellationToken);
     }
 
@@ -133,6 +134,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         await Store.SetContentTypeAsync(asset, descriptor.ContentType, cancellationToken);
         await Store.SetStatusAsync(asset, descriptor.Status, cancellationToken);
         await Store.SetSizeAsync(asset, descriptor.Size, cancellationToken);
+        await Store.SetCreatedAtAsync(asset, descriptor.CreatedAt, cancellationToken);
         await Store.SetDownloadedAtAsync(asset, descriptor.DownloadedAt, cancellationToken);
     }
 

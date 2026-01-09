@@ -153,6 +153,12 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         return new(asset.Description);
     }
 
+    public virtual ValueTask<DateTimeOffset?> GetCreatedAtAsync(TAsset asset, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(asset);
+
+        return new(asset.CreatedAt);
+    }
+
     public virtual ValueTask<DateTimeOffset?> GetDownloadedAtAsync(TAsset asset, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
@@ -286,10 +292,18 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         return ValueTask.CompletedTask;
     }
 
-    public virtual ValueTask SetDownloadedAtAsync(TAsset asset, DateTimeOffset? downloadAt, CancellationToken cancellationToken) {
+    public virtual ValueTask SetCreatedAtAsync(TAsset asset, DateTimeOffset? date, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.DownloadedAt = downloadAt?.UtcDateTime;
+        asset.CreatedAt = date?.UtcDateTime;
+
+        return ValueTask.CompletedTask;
+    }
+
+    public virtual ValueTask SetDownloadedAtAsync(TAsset asset, DateTimeOffset? date, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(asset);
+
+        asset.DownloadedAt = date?.UtcDateTime;
 
         return ValueTask.CompletedTask;
     }

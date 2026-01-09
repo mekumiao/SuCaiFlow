@@ -155,6 +155,7 @@ public partial class SuCaiFlowEngineService(
                 foreach (var item in assetDescriptors) {
                     collector.ParseStorageName(item);
                     item.OrderNo = ++descriptor.AssetsCollectedCount;
+                    item.CreatedAt = DateTimeOffset.UtcNow;
                 }
 
                 await assetManager.CreateRangeAsync(assetDescriptors, cancellationToken);

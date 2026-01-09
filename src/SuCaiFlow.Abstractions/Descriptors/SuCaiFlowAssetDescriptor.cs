@@ -21,6 +21,8 @@ public class SuCaiFlowAssetDescriptor {
 
     public long Size { get; set; }
 
+    public DateTimeOffset? CreatedAt { get; set; }
+
     public DateTimeOffset? DownloadedAt { get; set; }
 
     /// <summary>
