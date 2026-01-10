@@ -22,14 +22,14 @@ public sealed class SuCaiFlowEngineConcurrencyExecutor : IDisposable {
         ILogger<SuCaiFlowEngineConcurrencyExecutor> logger) {
         _options = options.Value;
         _logger = logger;
-        _targetConcurrency = _options.ChannelConcurrency;
+        _targetConcurrency = _options.MaxConcurrentTasks;
 
         ArgumentNullException.ThrowIfNull(_options);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.ChannelConcurrency);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.ChannelCapacity);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.MaxConcurrentTasks);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(_options.ChannelBufferFactor, 500);
 
         _channel = Channel.CreateBounded<QueuedWork>(
-            new BoundedChannelOptions(_options.ChannelCapacity) {
+            new BoundedChannelOptions(_options.MaxConcurrentTasks * _options.ChannelBufferFactor) {
                 FullMode = BoundedChannelFullMode.Wait,
                 SingleReader = false,
                 SingleWriter = false

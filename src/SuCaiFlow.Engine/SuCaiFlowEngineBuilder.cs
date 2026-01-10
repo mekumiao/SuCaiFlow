@@ -19,11 +19,14 @@ public class SuCaiFlowEngineBuilder(IServiceCollection services) {
         return this;
     }
 
-    public SuCaiFlowEngineBuilder SetChannelConcurrency(int channeConcurrency)
-        => Configure(options => options.ChannelConcurrency = channeConcurrency);
+    public SuCaiFlowEngineBuilder SetMaxConcurrentTasks(int maxConcurrentTasks)
+        => Configure(options => options.MaxConcurrentTasks = maxConcurrentTasks);
 
-    public SuCaiFlowEngineBuilder SetChannelCapacity(int channelCapacity)
-        => Configure(options => options.ChannelCapacity = channelCapacity);
+    public SuCaiFlowEngineBuilder SetMaxConcurrentDownloads(int maxConcurrentDownloads)
+        => Configure(options => options.MaxConcurrentDownloads = maxConcurrentDownloads);
+
+    public SuCaiFlowEngineBuilder SetChannelBufferFactor(int channelBufferFactor)
+        => Configure(options => options.ChannelBufferFactor = channelBufferFactor);
 
     public SuCaiFlowEngineBuilder AddSiteCollector<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TSiteCollector>()

@@ -2,6 +2,7 @@ using System.Threading.Channels;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using SuCaiFlow.Abstractions;
 using SuCaiFlow.Engine;
@@ -10,12 +11,14 @@ namespace SuCaiFlow.Core.Services;
 
 public partial class SuCaiFlowEngineService(
     ILogger<SuCaiFlowEngineService> logger,
+    IOptions<SuCaiFlowEngineOptions> options,
     ISuCaiFlowEngineSiteCollectorManager siteCollectorManager,
     ISuCaiFlowEngineEventPublisher eventPublisher,
     IServiceScopeFactory scopeFactory,
     SuCaiFlowEngineConcurrencyExecutor executor,
     SuCaiFlowEngineTaskTracker tracker) {
     private readonly ILogger<SuCaiFlowEngineService> _logger = logger;
+    private readonly SuCaiFlowEngineOptions _options = options.Value;
     private readonly ISuCaiFlowEngineSiteCollectorManager _siteCollectorManager = siteCollectorManager;
     private readonly ISuCaiFlowEngineEventPublisher _eventPublisher = eventPublisher;
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
@@ -106,31 +109,30 @@ public partial class SuCaiFlowEngineService(
         }, cancellationToken);
     }
 
-    private async Task ExecuteParallelCollectionAsync(
-        SuCaiFlowTaskDescriptor task,
-        CancellationToken cancellationToken) {
-        ArgumentException.ThrowIfNullOrWhiteSpace(task.SiteIdentifier);
+    private async Task ExecuteParallelCollectionAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.SiteIdentifier);
+        ArgumentNullException.ThrowIfNull(_options);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.MaxConcurrentDownloads);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(_options.ChannelBufferFactor, 500);
 
-        var channel = Channel.CreateBounded<SuCaiFlowAssetDescriptor>(1000);
-        var collector = _siteCollectorManager.GetCollectorByIdentifier(task.SiteIdentifier)
-            ?? throw new InvalidOperationException($"未找到标识为 {task.SiteIdentifier} 的采集站实现类 ISuCaiFlowEngineSiteCollector");
+        var channel = Channel.CreateBounded<SuCaiFlowAssetDescriptor>(
+            new BoundedChannelOptions(_options.MaxConcurrentDownloads * _options.ChannelBufferFactor) {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleWriter = true,
+                SingleReader = false
+            });
+        var collector = _siteCollectorManager.GetCollectorByIdentifier(descriptor.SiteIdentifier)
+            ?? throw new InvalidOperationException($"未找到标识为 {descriptor.SiteIdentifier} 的采集站实现类 ISuCaiFlowEngineSiteCollector");
 
         try {
-            var parsingTask = Task.Run(async () => await ParsePagesWithPaginationAsync(
-                task,
-                channel,
-                collector,
-                cancellationToken), cancellationToken);
-            var downloadingTask = Task.Run(async () => await ProcessAssetsDownloadsAsync(
-                channel,
-                collector,
-                cancellationToken), cancellationToken);
+            var parsingTask = ParsePagesWithPaginationAsync(descriptor, channel, collector, cancellationToken);
+            var downloadingTask = ProcessAssetsDownloadsAsync(channel, collector, cancellationToken);
 
             await Task.WhenAll(parsingTask, downloadingTask);
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Error executing parallel collection for task {TaskId}", task.TaskId);
+                _logger.LogError(ex, "Error executing parallel collection for task {TaskId}", descriptor.TaskId);
             throw;
         }
     }
@@ -142,19 +144,20 @@ public partial class SuCaiFlowEngineService(
         CancellationToken cancellationToken) {
         var currentPage = 1;
         var requestDelayMs = 1000;
+        var collected = descriptor.AssetsCollectedCount;
 
         await using var scope = _scopeFactory.CreateAsyncScope();
         var assetManager = scope.ServiceProvider.GetRequiredService<ISuCaiFlowAssetManager>();
 
         try {
-            while (descriptor.AssetsCollectedCount < descriptor.AssetsToCollectCount) {
+            while (collected < descriptor.AssetsToCollectCount) {
                 var assetDescriptors = await collector.ParsePageAsync(descriptor, currentPage, cancellationToken);
 
                 if (assetDescriptors.Count == 0) break;
 
                 foreach (var item in assetDescriptors) {
                     collector.ParseStorageName(item);
-                    item.OrderNo = ++descriptor.AssetsCollectedCount;
+                    item.OrderNo = ++collected;
                     item.CreatedAt = DateTimeOffset.UtcNow;
                 }
 
@@ -168,30 +171,32 @@ public partial class SuCaiFlowEngineService(
 
                 await Task.Delay(requestDelayMs, cancellationToken);
             }
-            channel.Writer.TryComplete();
         }
         catch (Exception ex) {
             if (_logger.IsEnabled(LogLevel.Error))
                 _logger.LogError(ex, "Error parsing pages for task {TaskId}", descriptor.TaskId);
             throw;
         }
+        finally {
+            descriptor.AssetsCollectedCount = collected;
+            channel.Writer.TryComplete();
+        }
     }
 
-    private static async Task ProcessAssetsDownloadsAsync(
+    private Task ProcessAssetsDownloadsAsync(
         Channel<SuCaiFlowAssetDescriptor> channel,
         ISuCaiFlowEngineSiteCollector collector,
         CancellationToken cancellationToken) {
-        var semaphore = new SemaphoreSlim(10);
-        await Task.Run(async () => {
-            await foreach (var item in channel.Reader.ReadAllAsync(cancellationToken)) {
-                await semaphore.WaitAsync(cancellationToken);
-                try {
+        var tasks = new List<Task>();
+
+        for (int i = 0; i < _options.MaxConcurrentDownloads; i++) {
+            tasks.Add(Task.Run(async () => {
+                await foreach (var item in channel.Reader.ReadAllAsync(cancellationToken)) {
                     await collector.DownloadAssetAsync(item, cancellationToken);
                 }
-                finally {
-                    semaphore.Release();
-                }
-            }
-        }, cancellationToken);
+            }, cancellationToken));
+        }
+
+        return Task.WhenAll(tasks);
     }
 }

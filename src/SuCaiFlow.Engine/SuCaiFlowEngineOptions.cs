@@ -1,8 +1,9 @@
 namespace SuCaiFlow.Engine;
 
 public class SuCaiFlowEngineOptions {
-    public int ChannelConcurrency { get; set; } = 5;
-    public int ChannelCapacity { get; set; } = 2000;
+    public int MaxConcurrentTasks { get; set; } = 10;
+    public int MaxConcurrentDownloads { get; set; } = 20;
+    public int ChannelBufferFactor { get; set; } = 50;
     public HashSet<Type> SiteCollectorImplementTypes { get; } = [];
     public TimeProvider TimeProvider { get; set; } = default!;
 }
