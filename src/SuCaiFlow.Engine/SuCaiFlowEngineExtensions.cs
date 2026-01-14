@@ -25,10 +25,9 @@ public static class SuCaiFlowEngineExtensions {
 
         builder.Services.TryAddScoped<SuCaiFlowEngineService>();
         builder.Services.TryAddSingleton<SuCaiFlowEngineTaskTracker>();
-        builder.Services.TryAddSingleton<SuCaiFlowEngineConcurrencyExecutor>();
+        builder.Services.TryAddSingleton<SuCaiFlowEngineTaskExecutor>();
         builder.Services.TryAddSingleton<SuCaiFlowEngineSiteCollectorManager>();
         builder.Services.TryAddSingleton<ISuCaiFlowEngineEventPublisher, SuCaiFlowEngineDefaultEventPublisher>();
-        builder.Services.AddHostedService<SuCaiFlowEngineExecutorHostedService>();
 
         builder.Services.TryAddSingleton<ISuCaiFlowEngineSiteCollectorManager>(provider => {
             var options = provider.GetRequiredService<IOptions<SuCaiFlowEngineOptions>>().Value;

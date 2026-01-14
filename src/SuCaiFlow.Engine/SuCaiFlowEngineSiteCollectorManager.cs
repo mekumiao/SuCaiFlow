@@ -8,28 +8,21 @@ namespace SuCaiFlow.Engine;
 public class SuCaiFlowEngineSiteCollectorManager(ILogger<SuCaiFlowEngineSiteCollectorManager> logger) : ISuCaiFlowEngineSiteCollectorManager {
 
     private readonly ILogger<SuCaiFlowEngineSiteCollectorManager> _logger = logger;
-    private readonly List<ISuCaiFlowEngineSiteCollector> _collectors = [];
+    private readonly Dictionary<string, ISuCaiFlowEngineSiteCollector> _collectors = new(StringComparer.OrdinalIgnoreCase);
 
     public void RegisterCollector(ISuCaiFlowEngineSiteCollector collector) {
-        if (_collectors.Any(c => c.SiteIdentifier.Equals(collector.SiteIdentifier, StringComparison.OrdinalIgnoreCase))) {
-            if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning("采集器 {SiteIdentifier} 已经注册", collector.SiteIdentifier);
-            return;
+        if (_collectors.TryAdd(collector.SiteIdentifier, collector)) {
+            if (_logger.IsEnabled(LogLevel.Information))
+                _logger.LogInformation("注册了采集器: {SiteIdentifier}", collector.SiteIdentifier);
         }
-
-        _collectors.Add(collector);
-        if (_logger.IsEnabled(LogLevel.Information))
-            _logger.LogInformation("注册了采集器: {SiteIdentifier}", collector.SiteIdentifier);
     }
 
     public ISuCaiFlowEngineSiteCollector? GetCollectorForUrl(string url) {
-        var collector = _collectors.FirstOrDefault(c => c.CanHandle(url));
-        return collector;
+        return _collectors.Values.FirstOrDefault(c => c.CanHandle(url));
     }
 
     public ISuCaiFlowEngineSiteCollector? GetCollectorByIdentifier(string siteIdentifier) {
-        var collector = _collectors.FirstOrDefault(c =>
-            c.SiteIdentifier.Equals(siteIdentifier, StringComparison.OrdinalIgnoreCase));
+        _collectors.TryGetValue(siteIdentifier, out var collector);
         return collector;
     }
 }
