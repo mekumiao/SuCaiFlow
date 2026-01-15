@@ -23,7 +23,7 @@ public class SuCaiFlowEngineBuilder(IServiceCollection services) {
         => Configure(options => options.MaxConcurrency = maxConcurrentTasks);
 
     public SuCaiFlowEngineBuilder SetMaxConcurrentDownloads(int maxConcurrentDownloads)
-        => Configure(options => options.MaxConcurrentDownloads = maxConcurrentDownloads);
+        => Configure(options => options.MaxDownloadConcurrency = maxConcurrentDownloads);
 
     public SuCaiFlowEngineBuilder SetChannelBufferFactor(int channelBufferFactor)
         => Configure(options => options.QueueCapacity = channelBufferFactor);

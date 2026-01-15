@@ -119,15 +119,15 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
     private async Task ExecuteParallelCollectionAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.SiteIdentifier);
         ArgumentNullException.ThrowIfNull(_options);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.MaxConcurrentDownloads);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.MaxDownloadConcurrency);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(_options.QueueCapacity, 500);
 
         var collector = _siteCollectorManager.GetCollectorByIdentifier(descriptor.SiteIdentifier)
             ?? throw new InvalidOperationException($"未找到标识为 {descriptor.SiteIdentifier} 的采集站实现类 ISuCaiFlowEngineSiteCollector");
 
         var downloadBlackOptions = new ExecutionDataflowBlockOptions {
-            MaxDegreeOfParallelism = _options.MaxConcurrentDownloads,
-            BoundedCapacity = _options.MaxConcurrentDownloads * _options.QueueCapacity,
+            MaxDegreeOfParallelism = _options.MaxDownloadConcurrency,
+            BoundedCapacity = _options.MaxDownloadConcurrency * _options.QueueCapacity,
             EnsureOrdered = false,
             CancellationToken = cancellationToken
         };
