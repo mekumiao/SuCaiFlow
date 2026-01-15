@@ -1,4 +1,3 @@
-using System.Threading.Channels;
 using System.Threading.Tasks.Dataflow;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -10,22 +9,22 @@ using SuCaiFlow.Abstractions;
 
 namespace SuCaiFlow.Engine;
 
-public sealed class SuCaiFlowEngineTaskExecutor {
+public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, ISuCaiFlowEngineTaskExecutor {
     private readonly ActionBlock<SuCaiFlowTaskDescriptor> _flowTaskBlock;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ISuCaiFlowEngineEventPublisher _eventPublisher;
     private readonly ISuCaiFlowEngineSiteCollectorManager _siteCollectorManager;
     private readonly SuCaiFlowEngineTaskTracker _tracker;
-    private readonly ILogger<SuCaiFlowEngineTaskExecutor> _logger;
+    private readonly ILogger<SuCaiFlowEngineTaskBackgroundService> _logger;
     private readonly SuCaiFlowEngineOptions _options;
 
-    public SuCaiFlowEngineTaskExecutor(
+    public SuCaiFlowEngineTaskBackgroundService(
         SuCaiFlowEngineTaskTracker tracker,
         IServiceScopeFactory scopeFactory,
         ISuCaiFlowEngineEventPublisher eventPublisher,
         ISuCaiFlowEngineSiteCollectorManager siteCollectorManager,
         IOptions<SuCaiFlowEngineOptions> options,
-        ILogger<SuCaiFlowEngineTaskExecutor> logger,
+        ILogger<SuCaiFlowEngineTaskBackgroundService> logger,
         IHostApplicationLifetime lifetime) {
         _tracker = tracker;
         _scopeFactory = scopeFactory;
@@ -58,11 +57,6 @@ public sealed class SuCaiFlowEngineTaskExecutor {
     public async Task EnqueueTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
         if (!_tracker.TryAdd(descriptor)) return;
         await _flowTaskBlock.SendAsync(descriptor, cancellationToken);
-    }
-
-    public async Task CompleteAsync(CancellationToken cancellationToken = default) {
-        _flowTaskBlock.Complete();
-        await _flowTaskBlock.Completion.WaitAsync(cancellationToken);
     }
 
     private async Task ExecuteFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken) {
@@ -128,33 +122,30 @@ public sealed class SuCaiFlowEngineTaskExecutor {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.MaxConcurrentDownloads);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(_options.QueueCapacity, 500);
 
-        var channel = Channel.CreateBounded<SuCaiFlowAssetDescriptor>(
-            new BoundedChannelOptions(_options.MaxConcurrentDownloads * _options.QueueCapacity) {
-                FullMode = BoundedChannelFullMode.Wait,
-                SingleWriter = true,
-                SingleReader = false
-            });
         var collector = _siteCollectorManager.GetCollectorByIdentifier(descriptor.SiteIdentifier)
             ?? throw new InvalidOperationException($"未找到标识为 {descriptor.SiteIdentifier} 的采集站实现类 ISuCaiFlowEngineSiteCollector");
 
-        try {
-            var parsingTask = ParsePagesWithPaginationAsync(descriptor, channel, collector, cancellationToken);
-            var downloadingTask = ExecuteAssetsDownloadAsync(channel, collector, cancellationToken);
+        var downloadBlackOptions = new ExecutionDataflowBlockOptions {
+            MaxDegreeOfParallelism = _options.MaxConcurrentDownloads,
+            BoundedCapacity = _options.MaxConcurrentDownloads * _options.QueueCapacity,
+            EnsureOrdered = false,
+            CancellationToken = cancellationToken
+        };
 
-            await Task.WhenAll(parsingTask, downloadingTask);
-        }
-        catch (Exception ex) {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Error executing parallel collection for task {TaskId}", descriptor.TaskId);
-            throw;
-        }
+        var downloadBlock = new ActionBlock<SuCaiFlowAssetDescriptor>(async assetDescriptor => {
+            try {
+                await collector.DownloadAssetAsync(assetDescriptor, cancellationToken);
+            }
+            catch (Exception ex) {
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Error downloading asset {OriginalUrl} for task {TaskId}", assetDescriptor.OriginalUrl, descriptor.TaskId);
+            }
+        }, downloadBlackOptions);
+
+        await ParsePagesAndDownloadAsync(descriptor, downloadBlock, collector, cancellationToken);
     }
 
-    private async Task ParsePagesWithPaginationAsync(
-        SuCaiFlowTaskDescriptor descriptor,
-        Channel<SuCaiFlowAssetDescriptor> channel,
-        ISuCaiFlowEngineSiteCollector collector,
-        CancellationToken cancellationToken) {
+    private async Task ParsePagesAndDownloadAsync(SuCaiFlowTaskDescriptor descriptor, ActionBlock<SuCaiFlowAssetDescriptor> downloadBlock, ISuCaiFlowEngineSiteCollector collector, CancellationToken cancellationToken) {
         var currentPage = 1;
         var requestDelayMs = 1000;
         var collected = descriptor.AssetsCollectedCount;
@@ -177,7 +168,7 @@ public sealed class SuCaiFlowEngineTaskExecutor {
                 await assetManager.CreateRangeAsync(assetDescriptors, cancellationToken);
 
                 foreach (var item in assetDescriptors) {
-                    await channel.Writer.WriteAsync(item, cancellationToken);
+                    await downloadBlock.SendAsync(item, cancellationToken);
                 }
 
                 currentPage++;
@@ -185,31 +176,22 @@ public sealed class SuCaiFlowEngineTaskExecutor {
                 await Task.Delay(requestDelayMs, cancellationToken);
             }
         }
-        catch (Exception ex) {
-            if (_logger.IsEnabled(LogLevel.Error))
-                _logger.LogError(ex, "Error parsing pages for task {TaskId}", descriptor.TaskId);
-            throw;
-        }
         finally {
             descriptor.AssetsCollectedCount = collected;
-            channel.Writer.TryComplete();
+            downloadBlock.Complete();
+            await downloadBlock.Completion;
         }
     }
 
-    private Task ExecuteAssetsDownloadAsync(
-        Channel<SuCaiFlowAssetDescriptor> channel,
-        ISuCaiFlowEngineSiteCollector collector,
-        CancellationToken cancellationToken) {
-        var tasks = new List<Task>();
-
-        for (int i = 0; i < _options.MaxConcurrentDownloads; i++) {
-            tasks.Add(Task.Run(async () => {
-                await foreach (var item in channel.Reader.ReadAllAsync(cancellationToken)) {
-                    await collector.DownloadAssetAsync(item, cancellationToken);
-                }
-            }, cancellationToken));
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+        try {
+            await Task.Delay(Timeout.Infinite, stoppingToken);
         }
-
-        return Task.WhenAll(tasks);
+        catch (OperationCanceledException) {
+        }
+        finally {
+            _flowTaskBlock.Complete();
+            await _flowTaskBlock.Completion;
+        }
     }
 }

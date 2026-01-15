@@ -3,8 +3,9 @@ using SuCaiFlow.Engine;
 
 namespace SuCaiFlow.Core.Services;
 
-public class SuCaiFlowEngineService(ISuCaiFlowTaskManager flowTaskManager, SuCaiFlowEngineTaskExecutor executor) {
+public class SuCaiFlowEngineService(ISuCaiFlowTaskManager flowTaskManager, ISuCaiFlowEngineTaskExecutor executor) {
     private readonly ISuCaiFlowTaskManager _flowTaskManager = flowTaskManager;
+    private readonly ISuCaiFlowEngineTaskExecutor _executor = executor;
 
     public Task CreateFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
         return CreateFlowTaskAsync(descriptor, true, cancellationToken);
@@ -27,6 +28,6 @@ public class SuCaiFlowEngineService(ISuCaiFlowTaskManager flowTaskManager, SuCai
     }
 
     public async Task PushFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
-        await executor.EnqueueTaskAsync(descriptor, cancellationToken);
+        await _executor.EnqueueTaskAsync(descriptor, cancellationToken);
     }
 }
