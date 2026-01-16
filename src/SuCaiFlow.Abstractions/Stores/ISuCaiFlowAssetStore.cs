@@ -24,7 +24,7 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
     ValueTask SetDescriptionAsync(TAsset asset, string? description, CancellationToken cancellationToken);
     ValueTask SetOriginalUrlAsync(TAsset asset, string? originalUrl, CancellationToken cancellationToken);
     ValueTask SetLandingUrlAsync(TAsset asset, string? landingUrl, CancellationToken cancellationToken);
-    ValueTask SetStorageNameAsync(TAsset asset, string? storageName, CancellationToken cancellationToken);
+    ValueTask SetObjectKeyAsync(TAsset asset, string? objectKey, CancellationToken cancellationToken);
     ValueTask SetContentTypeAsync(TAsset asset, string? contentType, CancellationToken cancellationToken);
     ValueTask SetStatusAsync(TAsset asset, string? status, CancellationToken cancellationToken);
     ValueTask SetSizeAsync(TAsset asset, long size, CancellationToken cancellationToken);
@@ -39,7 +39,7 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
     ValueTask<string?> GetDescriptionAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetOriginalUrlAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetLandingUrlAsync(TAsset asset, CancellationToken cancellationToken);
-    ValueTask<string?> GetStorageNameAsync(TAsset asset, CancellationToken cancellationToken);
+    ValueTask<string?> GetObjectKeyAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetContentTypeAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<string?> GetStatusAsync(TAsset asset, CancellationToken cancellationToken);
     ValueTask<long> GetSizeAsync(TAsset asset, CancellationToken cancellationToken);

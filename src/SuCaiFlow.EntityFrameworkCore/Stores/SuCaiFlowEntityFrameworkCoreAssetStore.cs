@@ -195,10 +195,10 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         return new(asset.Status);
     }
 
-    public virtual ValueTask<string?> GetStorageNameAsync(TAsset asset, CancellationToken cancellationToken) {
+    public virtual ValueTask<string?> GetObjectKeyAsync(TAsset asset, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        return new(asset.StorageName);
+        return new(asset.ObjectKey);
     }
 
     public virtual async ValueTask<string?> GetTaskIdAsync(TAsset asset, CancellationToken cancellationToken) {
@@ -348,10 +348,10 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         return ValueTask.CompletedTask;
     }
 
-    public virtual ValueTask SetStorageNameAsync(TAsset asset, string? storageName, CancellationToken cancellationToken) {
+    public virtual ValueTask SetObjectKeyAsync(TAsset asset, string? objectKey, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(asset);
 
-        asset.StorageName = storageName;
+        asset.ObjectKey = objectKey;
 
         return ValueTask.CompletedTask;
     }

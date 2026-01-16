@@ -32,7 +32,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetConfiguration<
         builder.Property(e => e.Description).HasMaxLength(5000);
         builder.Property(e => e.OriginalUrl).HasMaxLength(2000);
         builder.Property(e => e.LandingUrl).HasMaxLength(2000);
-        builder.Property(e => e.StorageName).HasMaxLength(500);
+        builder.Property(e => e.ObjectKey).HasMaxLength(500);
         builder.Property(e => e.ContentType).HasMaxLength(100);
 
         builder.Property(e => e.Id)

@@ -160,7 +160,7 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
                 if (assetDescriptors.Count == 0) break;
 
                 foreach (var item in assetDescriptors) {
-                    collector.ParseStorageName(item);
+                    collector.ParseObjectKey(item);
                     item.OrderNo = ++collected;
                     item.CreatedAt = DateTimeOffset.UtcNow;
                 }

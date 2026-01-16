@@ -17,7 +17,7 @@ public class SuCaiFlowAssetDescriptor {
 
     public string? LandingUrl { get; set; }
 
-    public string? StorageName { get; set; }
+    public string? ObjectKey { get; set; }
 
     public string? ContentType { get; set; }
 

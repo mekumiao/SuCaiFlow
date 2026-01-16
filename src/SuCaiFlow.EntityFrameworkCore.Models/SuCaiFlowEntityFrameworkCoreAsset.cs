@@ -30,7 +30,7 @@ public class SuCaiFlowEntityFrameworkCoreAsset<TKey, TTask>
 
     public virtual string? LandingUrl { get; set; }
 
-    public virtual string? StorageName { get; set; }
+    public virtual string? ObjectKey { get; set; }
 
     public virtual string? ContentType { get; set; }
 

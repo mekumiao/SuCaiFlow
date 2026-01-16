@@ -111,7 +111,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         descriptor.Description = await Store.GetDescriptionAsync(asset, cancellationToken);
         descriptor.OriginalUrl = await Store.GetOriginalUrlAsync(asset, cancellationToken);
         descriptor.LandingUrl = await Store.GetLandingUrlAsync(asset, cancellationToken);
-        descriptor.StorageName = await Store.GetStorageNameAsync(asset, cancellationToken);
+        descriptor.ObjectKey = await Store.GetObjectKeyAsync(asset, cancellationToken);
         descriptor.ContentType = await Store.GetContentTypeAsync(asset, cancellationToken);
         descriptor.Status = await Store.GetStatusAsync(asset, cancellationToken);
         descriptor.Size = await Store.GetSizeAsync(asset, cancellationToken);
@@ -130,7 +130,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         await Store.SetDescriptionAsync(asset, descriptor.Description, cancellationToken);
         await Store.SetOriginalUrlAsync(asset, descriptor.OriginalUrl, cancellationToken);
         await Store.SetLandingUrlAsync(asset, descriptor.LandingUrl, cancellationToken);
-        await Store.SetStorageNameAsync(asset, descriptor.StorageName, cancellationToken);
+        await Store.SetObjectKeyAsync(asset, descriptor.ObjectKey, cancellationToken);
         await Store.SetContentTypeAsync(asset, descriptor.ContentType, cancellationToken);
         await Store.SetStatusAsync(asset, descriptor.Status, cancellationToken);
         await Store.SetSizeAsync(asset, descriptor.Size, cancellationToken);
