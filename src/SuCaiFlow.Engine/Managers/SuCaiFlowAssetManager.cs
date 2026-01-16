@@ -28,7 +28,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         return entity;
     }
 
-    public virtual async ValueTask<ICollection<object>> CreateRangeAsync(ICollection<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken = default) {
+    public virtual async ValueTask<IReadOnlyList<object>> CreateRangeAsync(IEnumerable<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken = default) {
         ArgumentNullException.ThrowIfNull(descriptors);
 
         var entities = new List<TAsset>();
@@ -42,7 +42,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
 
         await Store.CreateRangeAsync(entities, cancellationToken);
 
-        return (ICollection<object>)entities;
+        return entities;
     }
 
     public virtual async ValueTask CreateRangeAsync(ICollection<TAsset> assets, CancellationToken cancellationToken = default) {
@@ -174,11 +174,11 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         return CreateAsync((TAsset)asset, cancellationToken);
     }
 
-    ValueTask<ICollection<object>> ISuCaiFlowAssetManager.CreateRangeAsync(ICollection<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken) {
+    ValueTask<IReadOnlyList<object>> ISuCaiFlowAssetManager.CreateRangeAsync(IEnumerable<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken) {
         return CreateRangeAsync(descriptors, cancellationToken);
     }
 
-    ValueTask ISuCaiFlowAssetManager.CreateRangeAsync(ICollection<object> assets, CancellationToken cancellationToken) {
+    ValueTask ISuCaiFlowAssetManager.CreateRangeAsync(IEnumerable<object> assets, CancellationToken cancellationToken) {
         return CreateRangeAsync((ICollection<TAsset>)assets, cancellationToken);
     }
 

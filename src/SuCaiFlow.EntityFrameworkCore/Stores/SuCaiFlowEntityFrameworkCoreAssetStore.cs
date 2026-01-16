@@ -65,14 +65,12 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public virtual async ValueTask CreateRangeAsync(ICollection<TAsset> entities, CancellationToken cancellationToken) {
+    public virtual async ValueTask CreateRangeAsync(IEnumerable<TAsset> entities, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(entities);
 
-        if (entities.Count != 0) {
-            var context = await Context.GetDbContextAsync(cancellationToken);
-            await context.AddRangeAsync(entities, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+        var context = await Context.GetDbContextAsync(cancellationToken);
+        await context.AddRangeAsync(entities, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     public virtual async ValueTask DeleteAsync(TAsset entity, CancellationToken cancellationToken) {
