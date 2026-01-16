@@ -28,7 +28,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         return entity;
     }
 
-    public virtual async ValueTask<IEnumerable<object>> CreateRangeAsync(IEnumerable<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken = default) {
+    public virtual async ValueTask<ICollection<object>> CreateRangeAsync(ICollection<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken = default) {
         ArgumentNullException.ThrowIfNull(descriptors);
 
         var entities = new List<TAsset>();
@@ -42,10 +42,10 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
 
         await Store.CreateRangeAsync(entities, cancellationToken);
 
-        return entities;
+        return (ICollection<object>)entities;
     }
 
-    public virtual async ValueTask CreateRangeAsync(IEnumerable<TAsset> assets, CancellationToken cancellationToken = default) {
+    public virtual async ValueTask CreateRangeAsync(ICollection<TAsset> assets, CancellationToken cancellationToken = default) {
         ArgumentNullException.ThrowIfNull(assets);
         await Store.CreateRangeAsync(assets, cancellationToken);
     }
@@ -174,12 +174,12 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
         return CreateAsync((TAsset)asset, cancellationToken);
     }
 
-    ValueTask<IEnumerable<object>> ISuCaiFlowAssetManager.CreateRangeAsync(IEnumerable<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken) {
+    ValueTask<ICollection<object>> ISuCaiFlowAssetManager.CreateRangeAsync(ICollection<SuCaiFlowAssetDescriptor> descriptors, CancellationToken cancellationToken) {
         return CreateRangeAsync(descriptors, cancellationToken);
     }
 
-    ValueTask ISuCaiFlowAssetManager.CreateRangeAsync(IEnumerable<object> assets, CancellationToken cancellationToken) {
-        return CreateRangeAsync((IEnumerable<TAsset>)assets, cancellationToken);
+    ValueTask ISuCaiFlowAssetManager.CreateRangeAsync(ICollection<object> assets, CancellationToken cancellationToken) {
+        return CreateRangeAsync((ICollection<TAsset>)assets, cancellationToken);
     }
 
     ValueTask ISuCaiFlowAssetManager.DeleteAsync(object asset, CancellationToken cancellationToken) {
