@@ -27,6 +27,15 @@ public class SuCaiFlowEngineService(ISuCaiFlowTaskManager flowTaskManager, ISuCa
         }
     }
 
+    public async Task RestartFlowTaskAsync(Guid id, CancellationToken cancellationToken = default) {
+        var identifier = id.ToString();
+        var entity = await _flowTaskManager.FindByIdAsync(identifier, cancellationToken)
+            ?? throw new SuCaiFlowExceptions.NotFoundTaskException($"未找到任务: {id}");
+        var descriptor = new SuCaiFlowTaskDescriptor();
+        await _flowTaskManager.PopulateAsync(descriptor, entity, cancellationToken);
+        await PushFlowTaskAsync(descriptor, cancellationToken);
+    }
+
     public async Task PushFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
         await _executor.EnqueueTaskAsync(descriptor, cancellationToken);
     }

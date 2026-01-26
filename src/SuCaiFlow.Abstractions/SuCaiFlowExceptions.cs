@@ -7,4 +7,10 @@ public static class SuCaiFlowExceptions {
             : this(message, exception: null) {
         }
     }
+
+    public sealed class NotFoundTaskException(string? message, Exception? exception) : Exception(message, exception) {
+        public NotFoundTaskException(string? message)
+            : this(message, exception: null) {
+        }
+    }
 }
