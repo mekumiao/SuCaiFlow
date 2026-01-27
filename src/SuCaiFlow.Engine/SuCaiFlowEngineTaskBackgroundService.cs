@@ -49,7 +49,7 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
             }
             catch (Exception ex) {
                 if (_logger.IsEnabled(LogLevel.Error))
-                    _logger.LogError(ex, "Error rendering task {TaskId}", task.TaskId);
+                    _logger.LogError(ex, "Error FlowTask task {TaskId}", task.TaskId);
             }
         }, executionOptions);
     }

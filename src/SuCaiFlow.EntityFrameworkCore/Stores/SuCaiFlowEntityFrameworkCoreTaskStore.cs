@@ -439,7 +439,6 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         try {
             await context.SaveChangesAsync(cancellationToken);
         }
-
         catch (DbUpdateConcurrencyException exception) {
             // Reset the state of the entity to prevents future calls to SaveChangesAsync() from failing.
             context.Entry(entity).State = EntityState.Unchanged;
