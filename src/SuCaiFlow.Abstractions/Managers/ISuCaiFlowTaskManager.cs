@@ -18,6 +18,7 @@ public interface ISuCaiFlowTaskManager {
     ValueTask UpdateAsync(object task, SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default);
     ValueTask PopulateAsync(SuCaiFlowTaskDescriptor descriptor, object task, CancellationToken cancellationToken = default);
     ValueTask PopulateAsync(object task, SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default);
+    ValueTask ClearAssetsAsync(string identifier, CancellationToken cancellationToken = default);
 
     ValueTask<string?> GetIdAsync(object task, CancellationToken cancellationToken = default);
 }

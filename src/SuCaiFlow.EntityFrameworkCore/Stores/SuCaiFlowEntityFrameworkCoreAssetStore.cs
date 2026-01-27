@@ -61,14 +61,18 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         ArgumentNullException.ThrowIfNull(entity);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
+        entity.ConcurrencyToken = Guid.NewGuid().ToString();
         await context.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public virtual async ValueTask CreateRangeAsync(IEnumerable<TAsset> entities, CancellationToken cancellationToken) {
+    public virtual async ValueTask CreateRangeAsync(ICollection<TAsset> entities, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(entities);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
+        foreach (var item in entities) {
+            item.ConcurrencyToken = Guid.NewGuid().ToString();
+        }
         await context.AddRangeAsync(entities, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }

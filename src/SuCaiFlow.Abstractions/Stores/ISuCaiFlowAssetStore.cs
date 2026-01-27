@@ -10,7 +10,7 @@ public interface ISuCaiFlowAssetStore<TAsset> where TAsset : class {
 
     ValueTask<TAsset> InstantiateAsync(CancellationToken cancellationToken);
     ValueTask CreateAsync(TAsset entity, CancellationToken cancellationToken);
-    ValueTask CreateRangeAsync(IEnumerable<TAsset> entities, CancellationToken cancellationToken);
+    ValueTask CreateRangeAsync(ICollection<TAsset> entities, CancellationToken cancellationToken);
     ValueTask UpdateAsync(TAsset application, CancellationToken cancellationToken);
     ValueTask DeleteAsync(TAsset application, CancellationToken cancellationToken);
 

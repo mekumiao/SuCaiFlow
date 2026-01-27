@@ -71,6 +71,8 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
 
         try {
             _tracker.MarkRunning(descriptor.TaskId);
+            descriptor.AssetsCollectedCount = 0;
+            await taskManager.ClearAssetsAsync(descriptor.TaskId, cancellationToken);
             await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
 
             await _eventPublisher.PublishAsync(new SuCaiFlowTaskStartedEvent {

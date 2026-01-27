@@ -64,6 +64,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         ArgumentNullException.ThrowIfNull(entity);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
+        entity.ConcurrencyToken = Guid.NewGuid().ToString();
         await context.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -82,6 +83,16 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
             context.Entry(entity).State = EntityState.Unchanged;
             throw new ConcurrencyException("数据发生变化", ex);
         }
+    }
+
+    public virtual async ValueTask ClearAssetsAsync(string identifier, CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
+        var context = await Context.GetDbContextAsync(cancellationToken);
+        var key = ConvertIdentifierFromString(identifier);
+        const string foreignKeyName = nameof(SuCaiFlowEntityFrameworkCoreAsset.Task) + nameof(SuCaiFlowEntityFrameworkCoreTask.Id);
+        await context.Set<TAsset>().Where(v => EF.Property<TKey?>(v, foreignKeyName)!.Equals(key))
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     public virtual async ValueTask<TTask?> FindByIdAsync(string identifier, CancellationToken cancellationToken) {

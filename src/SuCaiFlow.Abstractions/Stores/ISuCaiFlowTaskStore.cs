@@ -15,6 +15,7 @@ public interface ISuCaiFlowTaskStore<TTask> where TTask : class {
     ValueTask CreateAsync(TTask entity, CancellationToken cancellationToken);
     ValueTask DeleteAsync(TTask entity, CancellationToken cancellationToken);
     ValueTask UpdateAsync(TTask entity, CancellationToken cancellationToken);
+    ValueTask ClearAssetsAsync(string identifier, CancellationToken cancellationToken);
 
     ValueTask<TTask?> FindByIdAsync(string identifier, CancellationToken cancellationToken);
     IAsyncEnumerable<TTask> FindByStatusAsync(string status, CancellationToken cancellationToken);

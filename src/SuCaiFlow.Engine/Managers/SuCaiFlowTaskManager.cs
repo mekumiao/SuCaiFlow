@@ -139,6 +139,12 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         await Store.UpdateAsync(task, cancellationToken);
     }
 
+    public virtual ValueTask ClearAssetsAsync(string identifier, CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
+        return Store.ClearAssetsAsync(identifier, cancellationToken);
+    }
+
     public virtual ValueTask<string?> GetIdAsync(TTask task, CancellationToken cancellationToken = default) {
         return Store.GetIdAsync(task, cancellationToken);
     }
@@ -170,7 +176,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
     }
 
     ValueTask<long> ISuCaiFlowTaskManager.CountAsync(CancellationToken cancellationToken) {
-        return Store.CountAsync(cancellationToken);
+        return CountAsync(cancellationToken);
     }
 
     ValueTask<long> ISuCaiFlowTaskManager.CountAsync<TResult>(Func<IQueryable<object>, IQueryable<TResult>> query, CancellationToken cancellationToken) {
@@ -203,6 +209,10 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
 
     ValueTask ISuCaiFlowTaskManager.UpdateAsync(object task, SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken) {
         return UpdateAsync((TTask)task, descriptor, cancellationToken);
+    }
+
+    ValueTask ISuCaiFlowTaskManager.ClearAssetsAsync(string identifier, CancellationToken cancellationToken) {
+        return ClearAssetsAsync(identifier, cancellationToken);
     }
 
     ValueTask<string?> ISuCaiFlowTaskManager.GetIdAsync(object task, CancellationToken cancellationToken) {
