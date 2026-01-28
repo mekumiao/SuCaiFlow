@@ -33,6 +33,8 @@ public class SuCaiFlowEngineService(ISuCaiFlowTaskManager flowTaskManager, ISuCa
             ?? throw new SuCaiFlowExceptions.NotFoundTaskException($"未找到任务: {id}");
         var descriptor = new SuCaiFlowTaskDescriptor();
         await _flowTaskManager.PopulateAsync(descriptor, entity, cancellationToken);
+        if (descriptor.Status == SuCaiFlowConstants.TaskStatuses.Completed)
+            throw new InvalidOperationException("任务已完成，请新建任务");
         await PushFlowTaskAsync(descriptor, cancellationToken);
     }
 

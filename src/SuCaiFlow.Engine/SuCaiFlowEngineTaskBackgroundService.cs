@@ -59,6 +59,15 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
         await _flowTaskBlock.SendAsync(descriptor, cancellationToken);
     }
 
+    private static async Task UpdateTaskAsync(ISuCaiFlowTaskManager taskManager, SuCaiFlowTaskDescriptor descriptor, CancellationToken ct) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.TaskId);
+
+        var entity = await taskManager.FindByIdAsync(descriptor.TaskId, ct);
+        if (entity == null) return;
+
+        await taskManager.UpdateAsync(entity, descriptor, ct);
+    }
+
     private async Task ExecuteFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(descriptor);
         ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.TaskId);
@@ -71,9 +80,12 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
 
         try {
             _tracker.MarkRunning(descriptor.TaskId);
-            descriptor.AssetsCollectedCount = 0;
-            await taskManager.ClearAssetsAsync(descriptor.TaskId, cancellationToken);
-            await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            if (descriptor.AssetsCollectedCount > 0) {
+                await taskManager.ClearAssetsAsync(descriptor.TaskId, cancellationToken);
+                descriptor.AssetsCollectedCount = 0;
+            }
+            await UpdateTaskAsync(taskManager, descriptor, cancellationToken);
+            //await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
 
             await _eventPublisher.PublishAsync(new SuCaiFlowTaskStartedEvent {
                 TaskId = descriptor.TaskId,
@@ -82,7 +94,8 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
             await ExecuteParallelCollectionAsync(descriptor, cancellationToken);
 
             _tracker.MarkCompleted(descriptor.TaskId);
-            await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            //await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            await UpdateTaskAsync(taskManager, descriptor, cancellationToken);
 
             await _eventPublisher.PublishAsync(new SuCaiFlowTaskCompletedEvent {
                 TaskId = descriptor.TaskId,
@@ -96,7 +109,8 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
         }
         catch (OperationCanceledException) {
             _tracker.MarkCanceled(descriptor.TaskId);
-            await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            //await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            await UpdateTaskAsync(taskManager, descriptor, cancellationToken);
 
             await _eventPublisher.PublishAsync(new SuCaiFlowTaskCanceledEvent {
                 TaskId = descriptor.TaskId,
@@ -109,7 +123,8 @@ public sealed class SuCaiFlowEngineTaskBackgroundService : BackgroundService, IS
                 _logger.LogError(ex, "Error processing collection task {TaskId}", descriptor.TaskId);
 
             _tracker.MarkFailed(descriptor.TaskId, ex.Message);
-            await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            //await taskManager.UpdateAsync(taskEntity, descriptor, cancellationToken);
+            await UpdateTaskAsync(taskManager, descriptor, cancellationToken);
 
             await _eventPublisher.PublishAsync(new SuCaiFlowTaskFailedEvent {
                 TaskId = descriptor.TaskId,
