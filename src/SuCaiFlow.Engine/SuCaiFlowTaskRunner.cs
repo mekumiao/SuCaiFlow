@@ -138,6 +138,9 @@ public sealed class SuCaiFlowTaskRunner(
                 }
 
                 await Task.Delay(NextRequestDelayMilliseconds(), ct);
+#if DEBUG
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+#endif
             }
         }
         finally {

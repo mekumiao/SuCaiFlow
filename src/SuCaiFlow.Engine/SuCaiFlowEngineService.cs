@@ -47,14 +47,13 @@ public sealed class SuCaiFlowEngineService(
         ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
 
         registry.Cancel(taskId);
-
         var entity = await flowTaskManager.FindByIdAsync(taskId, ct);
         if (entity != null) await flowTaskManager.DeleteAsync(entity, ct);
     }
 
-    public void Cancel(string taskId) {
+    public async Task CancelAndWaitForCompletionAsync(string taskId, CancellationToken ct = default) {
         ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
 
-        registry.Cancel(taskId);
+        await registry.CancelAndWaitForCompletionAsync(taskId, ct);
     }
 }

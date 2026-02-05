@@ -49,7 +49,7 @@ public sealed class SuCaiFlowTaskStatusReporter(
         SuCaiFlowTaskContext ctx,
         CancellationToken ct = default) {
         ctx.Descriptor.MarkCanceled();
-        ctx.Completion.TrySetCanceled(ct);
+        ctx.Completion.TrySetCanceled(ctx.Cancellation.Token);
         await UpdateAsync(ctx, ct);
         await publisher.PublishAsync<SuCaiFlowTaskCanceledEvent>(new() {
             TaskId = ctx.TaskId,
