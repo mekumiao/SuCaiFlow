@@ -2,10 +2,8 @@ using Microsoft.Extensions.Logging;
 
 namespace SuCaiFlow.Engine;
 
-/// <summary>
-/// 站点采集器管理器实现
-/// </summary>
-public class SuCaiFlowEngineSiteCollectorManager(ILogger<SuCaiFlowEngineSiteCollectorManager> logger) : ISuCaiFlowEngineSiteCollectorManager {
+public class SuCaiFlowEngineSiteCollectorManager(ILogger<SuCaiFlowEngineSiteCollectorManager> logger)
+    : ISuCaiFlowEngineSiteCollectorManager {
 
     private readonly ILogger<SuCaiFlowEngineSiteCollectorManager> _logger = logger;
     private readonly Dictionary<string, ISuCaiFlowEngineSiteCollector> _collectors = new(StringComparer.OrdinalIgnoreCase);

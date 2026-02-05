@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using SuCaiFlow.Abstractions;
@@ -24,16 +25,13 @@ public static class SuCaiFlowEngineExtensions {
             throw new InvalidOperationException());
 
         builder.Services.TryAddScoped<SuCaiFlowEngineService>();
-        builder.Services.TryAddSingleton<SuCaiFlowEngineTaskTracker>();
-        builder.Services.TryAddSingleton<SuCaiFlowEngineTaskBackgroundService>();
+        builder.Services.TryAddScoped<SuCaiFlowTaskStatusReporter>();
+
+        builder.Services.TryAddSingleton<SuCaiFlowTaskRunner>();
+        builder.Services.TryAddSingleton<SuCaiFlowTaskRegistry>();
+        builder.Services.TryAddSingleton<SuCaiFlowTaskScheduler>();
         builder.Services.TryAddSingleton<SuCaiFlowEngineSiteCollectorManager>();
         builder.Services.TryAddSingleton<ISuCaiFlowEngineEventPublisher, SuCaiFlowEngineDefaultEventPublisher>();
-        builder.Services.TryAddSingleton<ISuCaiFlowEngineTaskExecutor>(
-            provider => provider.GetRequiredService<SuCaiFlowEngineTaskBackgroundService>());
-
-        builder.Services.AddHostedService(
-            provider => provider.GetRequiredService<SuCaiFlowEngineTaskBackgroundService>());
-
         builder.Services.TryAddSingleton<ISuCaiFlowEngineSiteCollectorManager>(provider => {
             var options = provider.GetRequiredService<IOptions<SuCaiFlowEngineOptions>>().Value;
             var service = provider.GetRequiredService<SuCaiFlowEngineSiteCollectorManager>();
@@ -43,6 +41,8 @@ public static class SuCaiFlowEngineExtensions {
             }
             return service;
         });
+
+        builder.Services.AddHostedService<SuCaiFlowEngineHostedService>();
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<
             IPostConfigureOptions<SuCaiFlowEngineOptions>, SuCaiFlowEngineConfiguration>());

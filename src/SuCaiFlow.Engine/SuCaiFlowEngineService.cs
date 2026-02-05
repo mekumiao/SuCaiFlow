@@ -1,44 +1,51 @@
 using SuCaiFlow.Abstractions;
+using SuCaiFlow.Abstractions.Descriptors;
 using SuCaiFlow.Engine;
 
 namespace SuCaiFlow.Core.Services;
 
-public class SuCaiFlowEngineService(ISuCaiFlowTaskManager flowTaskManager, ISuCaiFlowEngineTaskExecutor executor) {
-    private readonly ISuCaiFlowTaskManager _flowTaskManager = flowTaskManager;
-    private readonly ISuCaiFlowEngineTaskExecutor _executor = executor;
+public sealed class SuCaiFlowEngineService(
+    ISuCaiFlowTaskManager flowTaskManager,
+    SuCaiFlowTaskRegistry registry,
+    SuCaiFlowTaskScheduler scheduler) {
 
-    public Task CreateFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
-        return CreateFlowTaskAsync(descriptor, true, cancellationToken);
+    public async Task<SuCaiFlowTaskDescriptor> CreateAsync(
+        SuCaiFlowTaskRequest request,
+        CancellationToken ct = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.SiteIdentifier);
+
+        var descriptor = new SuCaiFlowTaskDescriptor {
+            CreatedAt = DateTimeOffset.UtcNow,
+            Status = SuCaiFlowConstants.TaskStatuses.Pending,
+            ErrorMessage = default
+        };
+        descriptor.MapFrom(request);
+
+        var entity = await flowTaskManager.CreateAsync(descriptor, ct);
+        await flowTaskManager.PopulateAsync(descriptor, entity, ct);
+
+        return descriptor;
     }
 
-    public async Task CreateFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, bool pushOnCreated, CancellationToken cancellationToken = default) {
-        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.SiteIdentifier);
+    public async Task StartAsync(string taskId, CancellationToken ct = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
 
-        descriptor.CreatedAt = DateTimeOffset.UtcNow;
-        descriptor.Status = SuCaiFlowConstants.TaskStatuses.Pending;
-        descriptor.ErrorMessage = default;
+        var entity = await flowTaskManager.FindByIdAsync(taskId, ct)
+            ?? throw new SuCaiFlowExceptions.NotFoundTaskException($"未找到任务: {taskId}");
 
-        var entity = await _flowTaskManager.CreateAsync(descriptor, cancellationToken);
-        await _flowTaskManager.PopulateAsync(descriptor, entity, cancellationToken);
-        ArgumentException.ThrowIfNullOrWhiteSpace(descriptor.TaskId);
-
-        if (pushOnCreated) {
-            await PushFlowTaskAsync(descriptor, cancellationToken);
-        }
-    }
-
-    public async Task RestartFlowTaskAsync(Guid id, CancellationToken cancellationToken = default) {
-        var identifier = id.ToString();
-        var entity = await _flowTaskManager.FindByIdAsync(identifier, cancellationToken)
-            ?? throw new SuCaiFlowExceptions.NotFoundTaskException($"未找到任务: {id}");
         var descriptor = new SuCaiFlowTaskDescriptor();
-        await _flowTaskManager.PopulateAsync(descriptor, entity, cancellationToken);
+        await flowTaskManager.PopulateAsync(descriptor, entity, ct);
+
         if (descriptor.Status == SuCaiFlowConstants.TaskStatuses.Completed)
             throw new InvalidOperationException("任务已完成，请新建任务");
-        await PushFlowTaskAsync(descriptor, cancellationToken);
+
+        if (registry.TryRegister(descriptor, out var ctx))
+            await scheduler.EnqueueAsync(ctx, ct);
     }
 
-    public async Task PushFlowTaskAsync(SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
-        await _executor.EnqueueTaskAsync(descriptor, cancellationToken);
+    public void Cancel(string taskId) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
+
+        registry.Cancel(taskId);
     }
 }
