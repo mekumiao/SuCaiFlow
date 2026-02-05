@@ -43,6 +43,15 @@ public sealed class SuCaiFlowEngineService(
             await scheduler.EnqueueAsync(ctx, ct);
     }
 
+    public async Task DeleteAsync(string taskId, CancellationToken ct = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
+
+        registry.Cancel(taskId);
+
+        var entity = await flowTaskManager.FindByIdAsync(taskId, ct);
+        if (entity != null) await flowTaskManager.DeleteAsync(entity, ct);
+    }
+
     public void Cancel(string taskId) {
         ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
 
