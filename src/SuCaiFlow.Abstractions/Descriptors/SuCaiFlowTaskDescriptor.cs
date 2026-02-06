@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-using SuCaiFlow.Abstractions.Descriptors;
-
 namespace SuCaiFlow.Abstractions;
 
 public class SuCaiFlowTaskDescriptor {
