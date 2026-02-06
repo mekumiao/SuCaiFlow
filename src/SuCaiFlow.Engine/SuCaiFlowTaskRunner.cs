@@ -18,24 +18,19 @@ public sealed class SuCaiFlowTaskRunner(
     private readonly SuCaiFlowEngineOptions _options = options.Value;
 
     public async Task RunAsync(SuCaiFlowTaskContext ctx) {
-        var ct = ctx.Cancellation.Token;
-        if (ct.IsCancellationRequested) {
-            registry.Complete(ctx.TaskId);
-            return;
-        }
-
         await using var scope = scopeFactory.CreateAsyncScope();
         var scheduler = scope.ServiceProvider.GetRequiredService<SuCaiFlowTaskScheduler>();
         var reporter = scope.ServiceProvider.GetRequiredService<SuCaiFlowTaskStatusReporter>();
         var assetManager = scope.ServiceProvider.GetRequiredService<ISuCaiFlowAssetManager>();
+        var ct = ctx.Cancellation.Token;
 
         try {
-            await reporter.ReportRunningAsync(ctx);
             ct.ThrowIfCancellationRequested();
+            await reporter.ReportRunningAsync(ctx);
             await ParsePagesAndDownloadAsync(ctx, scheduler, reporter, assetManager);
             await reporter.ReportCompletedAsync(ctx);
         }
-        catch (OperationCanceledException) when (ctx.Cancellation.IsCancellationRequested) {
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) {
             await reporter.ReportCanceledAsync(ctx);
         }
         catch (Exception ex) {
@@ -138,9 +133,6 @@ public sealed class SuCaiFlowTaskRunner(
                 }
 
                 await Task.Delay(NextRequestDelayMilliseconds(), ct);
-#if DEBUG
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
-#endif
             }
         }
         finally {

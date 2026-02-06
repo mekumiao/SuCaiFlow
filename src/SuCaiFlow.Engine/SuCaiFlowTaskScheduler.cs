@@ -38,13 +38,13 @@ public sealed class SuCaiFlowTaskScheduler {
     }
 
     public async Task EnqueueAsync(SuCaiFlowTaskContext ctx, CancellationToken ct = default) {
-        if (!ctx.Cancellation.IsCancellationRequested)
-            await _block.SendAsync(ctx, ct);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(ctx.Cancellation.Token, ct);
+        await _block.SendAsync(ctx, cts.Token);
     }
 
     public async Task EnqueueAsync(SuCaiFlowDownloadTaskContext ctx, CancellationToken ct = default) {
-        if (!ctx.CancellationToken.IsCancellationRequested)
-            await _dblock.SendAsync(ctx, ct);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(ctx.CancellationToken, ct);
+        await _dblock.SendAsync(ctx, cts.Token);
     }
 
     public async Task StopAsync() {
