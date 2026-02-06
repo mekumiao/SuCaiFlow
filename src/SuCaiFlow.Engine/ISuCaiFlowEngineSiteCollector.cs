@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using SuCaiFlow.Abstractions;
 
 namespace SuCaiFlow.Engine;
@@ -6,7 +8,7 @@ public interface ISuCaiFlowEngineSiteCollector {
 
     string SiteIdentifier { get; }
 
-    bool CanHandle(string url);
+    bool CanHandle([NotNullWhen(true)] string? url);
 
     string? ParseObjectKey(SuCaiFlowAssetDescriptor assetDescriptor);
 
