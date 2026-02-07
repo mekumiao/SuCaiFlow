@@ -50,7 +50,7 @@ public sealed class SuCaiFlowTaskScheduler {
     public async Task StopAsync() {
         _block.Complete();
         _dblock.Complete();
-        await _block.Completion;
-        await _dblock.Completion;
+        try { await _block.Completion; } catch { }
+        try { await _dblock.Completion; } catch { }
     }
 }
