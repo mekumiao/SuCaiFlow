@@ -92,12 +92,12 @@ public sealed class SuCaiFlowTaskRunner(
             SingleWriter = true,
         });
 
-        var contextChannelTask = Task.Factory.StartNew(async () => {
+        var contextChannelTask = Task.Run(async () => {
             await foreach (var item in contextChannel.Reader.ReadAllAsync(ct)) {
                 await scheduler.EnqueueAsync(item, ct);
             }
         }, ct);
-        var completionChannelTask = Task.Factory.StartNew(async () => {
+        var completionChannelTask = Task.Run(async () => {
             await foreach (var item in completionChannel.Reader.ReadAllAsync(ct)) {
                 try { await item.Task.WaitAsync(ct); } catch { }
             }
