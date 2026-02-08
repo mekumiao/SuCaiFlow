@@ -37,6 +37,7 @@ public sealed class SuCaiFlowTaskRegistry {
     public async Task CancelAndWaitForCompletionAsync(string taskId, CancellationToken ct = default) {
         if (_tasks.TryGetValue(taskId, out var ctx)) {
             ctx.Cancellation.Cancel();
+            if (ctx.Descriptor.Status == SuCaiFlowConstants.TaskStatuses.Pending) return;
             try { await ctx.Completion.Task.WaitAsync(ct); }
             catch (OperationCanceledException) when (ctx.Cancellation.IsCancellationRequested) { }
         }

@@ -59,9 +59,7 @@ public sealed class SuCaiFlowEngineService(
     public async Task DeleteAsync(string taskId, CancellationToken ct = default) {
         ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
 
-        if (registry.TryGet(taskId, out _))
-            throw new InvalidOperationException("任务在队列中,请先取消任务");
-
+        registry.Cancel(taskId);
         var entity = await flowTaskManager.FindByIdAsync(taskId, ct);
         if (entity != null) await flowTaskManager.DeleteAsync(entity, ct);
     }
