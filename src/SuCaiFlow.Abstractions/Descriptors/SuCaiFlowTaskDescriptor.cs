@@ -41,6 +41,13 @@ public class SuCaiFlowTaskDescriptor {
 
     public Dictionary<string, JsonElement> Parameters { get; } = new(StringComparer.Ordinal);
 
+    public void MarkPending() {
+        Status = SuCaiFlowConstants.TaskStatuses.Pending;
+        StartedAt = default;
+        CompletedAt = default;
+        ErrorMessage = default;
+    }
+
     public void MarkRunning() {
         Status = SuCaiFlowConstants.TaskStatuses.Running;
         StartedAt = DateTimeOffset.UtcNow;

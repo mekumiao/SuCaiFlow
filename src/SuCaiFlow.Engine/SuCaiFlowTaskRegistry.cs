@@ -24,7 +24,7 @@ public sealed class SuCaiFlowTaskRegistry {
         return _tasks.TryGetValue(taskId, out ctx);
     }
 
-    public void Complete(string taskId) {
+    public void Release(string taskId) {
         if (_tasks.TryRemove(taskId, out var ctx))
             ctx.Cancellation.Dispose();
     }

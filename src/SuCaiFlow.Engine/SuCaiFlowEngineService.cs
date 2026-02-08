@@ -1,11 +1,15 @@
+using Microsoft.Extensions.Logging;
+
 using SuCaiFlow.Abstractions;
 using SuCaiFlow.Engine;
 
 namespace SuCaiFlow.Core.Services;
 
 public sealed class SuCaiFlowEngineService(
+    ILogger<SuCaiFlowEngineService> logger,
     ISuCaiFlowTaskManager flowTaskManager,
     SuCaiFlowTaskRegistry registry,
+    SuCaiFlowTaskStatusReporter reporter,
     SuCaiFlowTaskScheduler scheduler) {
 
     public async Task<SuCaiFlowTaskDescriptor> CreateAsync(
@@ -39,13 +43,25 @@ public sealed class SuCaiFlowEngineService(
             throw new InvalidOperationException("任务已完成，请新建任务");
 
         if (registry.TryRegister(descriptor, out var ctx))
-            await scheduler.EnqueueAsync(ctx, ct);
+            try {
+                ctx.Descriptor.AssetsCollectedCount = 0;
+                await flowTaskManager.ClearAssetsAsync(ctx.TaskId, ct);
+                await reporter.ReportPendingAsync(ctx, ct);
+                await scheduler.EnqueueAsync(ctx, ct);
+            }
+            catch (Exception ex) {
+                registry.Release(ctx.TaskId);
+                await reporter.ReportFailedAsync(ctx, ex, default);
+                logger.LogError(ex, "采集任务入队时失败 {taskId}", ctx.TaskId);
+            }
     }
 
     public async Task DeleteAsync(string taskId, CancellationToken ct = default) {
         ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
 
-        registry.Cancel(taskId);
+        if (registry.TryGet(taskId, out _))
+            throw new InvalidOperationException("任务在队列中,请先取消任务");
+
         var entity = await flowTaskManager.FindByIdAsync(taskId, ct);
         if (entity != null) await flowTaskManager.DeleteAsync(entity, ct);
     }

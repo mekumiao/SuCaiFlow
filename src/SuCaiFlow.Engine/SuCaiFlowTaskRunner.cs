@@ -37,7 +37,7 @@ public sealed class SuCaiFlowTaskRunner(
             await reporter.ReportFailedAsync(ctx, ex);
         }
         finally {
-            registry.Complete(ctx.TaskId);
+            registry.Release(ctx.TaskId);
         }
     }
 

@@ -9,11 +9,17 @@ public sealed class SuCaiFlowTaskStatusReporter(
     ISuCaiFlowTaskManager taskManager,
     ISuCaiFlowEngineEventPublisher publisher) {
 
+    public async Task ReportPendingAsync(
+        SuCaiFlowTaskContext ctx,
+        CancellationToken ct = default) {
+        ctx.Descriptor.MarkPending();
+        await UpdateAsync(ctx, ct);
+    }
+
     public async Task ReportRunningAsync(
         SuCaiFlowTaskContext ctx,
         CancellationToken ct = default) {
         ctx.Descriptor.MarkRunning();
-        await ClearnAssetsAsync(ctx, ct);
         await UpdateAsync(ctx, ct);
         await publisher.PublishAsync<SuCaiFlowTaskStartedEvent>(new() {
             TaskId = ctx.TaskId,
@@ -70,16 +76,6 @@ public sealed class SuCaiFlowTaskStatusReporter(
             ErrorMessage = ex.Message
         }, ct);
         logger.LogError(ex, "执行采集任务时出错 {taskId}", ctx.TaskId);
-    }
-
-    private async Task ClearnAssetsAsync(
-        SuCaiFlowTaskContext ctx,
-        CancellationToken ct = default) {
-        if (ctx.Descriptor.AssetsCollectedCount > 0) {
-            ctx.Descriptor.AssetsCollectedCount = 0;
-            await taskManager.ClearAssetsAsync(ctx.TaskId, ct);
-            await UpdateAsync(ctx, ct);
-        }
     }
 
     private async Task UpdateAsync(
