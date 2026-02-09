@@ -99,6 +99,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         descriptor.AssetsDownloadCount = await Store.GetAssetsDownloadCountAsync(task, cancellationToken);
         descriptor.AssetsCollectedCount = await Store.GetAssetsCollectedCountAsync(task, cancellationToken);
         descriptor.AssetsToCollectCount = await Store.GetAssetsToCollectCountAsync(task, cancellationToken);
+        descriptor.KeepAfterCancel = await Store.GetKeepAfterCancelAsync(task, cancellationToken);
 
         descriptor.Parameters.Clear();
         foreach (var pair in await Store.GetParametersAsync(task, cancellationToken)) {
@@ -123,6 +124,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
         await Store.SetAssetsCollectedCountAsync(task, descriptor.AssetsCollectedCount, cancellationToken);
         await Store.SetAssetsToCollectCountAsync(task, descriptor.AssetsToCollectCount, cancellationToken);
         await Store.SetParametersAsync(task, descriptor.Parameters.ToImmutableDictionary(), cancellationToken);
+        await Store.SetKeepAfterCancelAsync(task, descriptor.KeepAfterCancel, cancellationToken);
     }
 
     public virtual async ValueTask UpdateAsync(TTask task, SuCaiFlowTaskDescriptor descriptor, CancellationToken cancellationToken = default) {
@@ -147,6 +149,10 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
 
     public virtual ValueTask<string?> GetIdAsync(TTask task, CancellationToken cancellationToken = default) {
         return Store.GetIdAsync(task, cancellationToken);
+    }
+
+    public virtual ValueTask<bool> GetKeepAfterCancelAsync(TTask task, CancellationToken cancellationToken = default) {
+        return Store.GetKeepAfterCancelAsync(task, cancellationToken);
     }
     #endregion
 
@@ -217,6 +223,10 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
 
     ValueTask<string?> ISuCaiFlowTaskManager.GetIdAsync(object task, CancellationToken cancellationToken) {
         return GetIdAsync((TTask)task, cancellationToken);
+    }
+
+    ValueTask<bool> ISuCaiFlowTaskManager.GetKeepAfterCancelAsync(object task, CancellationToken cancellationToken) {
+        return GetKeepAfterCancelAsync((TTask)task, cancellationToken);
     }
     #endregion
 }

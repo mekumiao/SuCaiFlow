@@ -38,10 +38,6 @@ public class SuCaiFlowEntityFrameworkCoreAssetConfiguration<
         builder.Property(e => e.Id)
                .ValueGeneratedOnAdd();
 
-        builder.Property(e => e.ConcurrencyToken)
-               .HasMaxLength(50)
-               .IsConcurrencyToken();
-
         builder.ToTable("SuCaiFlowAssets");
     }
 }

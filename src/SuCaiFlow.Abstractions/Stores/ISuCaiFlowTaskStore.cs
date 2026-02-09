@@ -33,6 +33,7 @@ public interface ISuCaiFlowTaskStore<TTask> where TTask : class {
     ValueTask SetAssetsDownloadCountAsync(TTask task, int count, CancellationToken cancellationToken);
     ValueTask SetAssetsToCollectCountAsync(TTask task, int count, CancellationToken cancellationToken);
     ValueTask SetParametersAsync(TTask task, ImmutableDictionary<string, JsonElement> parameters, CancellationToken cancellationToken);
+    ValueTask SetKeepAfterCancelAsync(TTask task, bool keepAfterCancel, CancellationToken cancellationToken);
 
     ValueTask<string?> GetIdAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<string?> GetNameAsync(TTask task, CancellationToken cancellationToken);
@@ -48,4 +49,5 @@ public interface ISuCaiFlowTaskStore<TTask> where TTask : class {
     ValueTask<int> GetAssetsDownloadCountAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<int> GetAssetsToCollectCountAsync(TTask task, CancellationToken cancellationToken);
     ValueTask<ImmutableDictionary<string, JsonElement>> GetParametersAsync(TTask task, CancellationToken cancellationToken);
+    ValueTask<bool> GetKeepAfterCancelAsync(TTask task, CancellationToken cancellationToken);
 }

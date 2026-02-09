@@ -21,4 +21,5 @@ public interface ISuCaiFlowTaskManager {
     ValueTask ClearAssetsAsync(string identifier, CancellationToken cancellationToken = default);
 
     ValueTask<string?> GetIdAsync(object task, CancellationToken cancellationToken = default);
+    ValueTask<bool> GetKeepAfterCancelAsync(object task, CancellationToken cancellationToken = default);
 }

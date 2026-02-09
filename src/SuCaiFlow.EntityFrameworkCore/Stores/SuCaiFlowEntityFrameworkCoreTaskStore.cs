@@ -64,7 +64,6 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         ArgumentNullException.ThrowIfNull(entity);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
-        entity.ConcurrencyToken = Guid.NewGuid().ToString();
         await context.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -256,6 +255,12 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         return new(task.AssetsToCollectCount);
     }
 
+    public virtual ValueTask<bool> GetKeepAfterCancelAsync(TTask task, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(task);
+
+        return new(task.KeepAfterCancel);
+    }
+
     public virtual ValueTask<TTask> InstantiateAsync(CancellationToken cancellationToken) {
         try {
             return new(Activator.CreateInstance<TTask>());
@@ -423,17 +428,20 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
         return ValueTask.CompletedTask;
     }
 
+    public virtual ValueTask SetKeepAfterCancelAsync(TTask task, bool keepAfterCancel, CancellationToken cancellationToken) {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.KeepAfterCancel = keepAfterCancel;
+
+        return ValueTask.CompletedTask;
+    }
+
     public virtual async ValueTask UpdateAsync(TTask entity, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(entity);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
 
         context.Attach(entity);
-
-        // Generate a new concurrency token and attach it
-        // to the application before persisting the changes.
-        entity.ConcurrencyToken = Guid.NewGuid().ToString();
-
         context.Update(entity);
 
         try {

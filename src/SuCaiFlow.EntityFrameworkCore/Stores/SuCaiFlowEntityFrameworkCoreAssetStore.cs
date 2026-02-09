@@ -61,7 +61,6 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         ArgumentNullException.ThrowIfNull(entity);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
-        entity.ConcurrencyToken = Guid.NewGuid().ToString();
         await context.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -70,9 +69,6 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         ArgumentNullException.ThrowIfNull(entities);
 
         var context = await Context.GetDbContextAsync(cancellationToken);
-        foreach (var item in entities) {
-            item.ConcurrencyToken = Guid.NewGuid().ToString();
-        }
         await context.AddRangeAsync(entities, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -404,11 +400,6 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
         var context = await Context.GetDbContextAsync(cancellationToken);
 
         context.Attach(entity);
-
-        // Generate a new concurrency token and attach it
-        // to the application before persisting the changes.
-        entity.ConcurrencyToken = Guid.NewGuid().ToString();
-
         context.Update(entity);
 
         try {

@@ -51,5 +51,5 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual ICollection<TAsset> Assets { get; } = new HashSet<TAsset>();
 
-    public virtual string? ConcurrencyToken { get; set; }
+    public virtual bool KeepAfterCancel { get; set; }
 }

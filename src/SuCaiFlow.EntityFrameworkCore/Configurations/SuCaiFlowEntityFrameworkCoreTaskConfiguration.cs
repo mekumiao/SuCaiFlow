@@ -27,10 +27,6 @@ public class SuCaiFlowEntityFrameworkCoreTaskConfiguration<TTask, TAsset, Tkey>
         builder.HasIndex(e => e.Name)
                .IsUnique(false);
 
-        builder.Property(e => e.ConcurrencyToken)
-               .HasMaxLength(50)
-               .IsConcurrencyToken();
-
         builder.HasMany(e => e.Assets)
                .WithOne(a => a.Task)
                .HasForeignKey(nameof(SuCaiFlowEntityFrameworkCoreAsset.Task) + nameof(SuCaiFlowEntityFrameworkCoreTask.Id))

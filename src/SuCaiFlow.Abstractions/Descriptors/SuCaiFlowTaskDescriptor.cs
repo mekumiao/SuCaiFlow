@@ -39,6 +39,8 @@ public class SuCaiFlowTaskDescriptor {
 
     public int AssetsToCollectCount { get; set; }
 
+    public bool KeepAfterCancel { get; set; }
+
     public Dictionary<string, JsonElement> Parameters { get; } = new(StringComparer.Ordinal);
 
     public void MarkPending() {
@@ -56,6 +58,7 @@ public class SuCaiFlowTaskDescriptor {
     public void MarkCompleted() {
         Status = SuCaiFlowConstants.TaskStatuses.Completed;
         CompletedAt = DateTimeOffset.UtcNow;
+        KeepAfterCancel = true;
     }
 
     public void MarkCanceled() {
