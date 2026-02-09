@@ -78,7 +78,7 @@ public sealed class SuCaiFlowTaskStatusReporter(
         logger.LogError(ex, "执行采集任务时出错 {taskId}", ctx.TaskId);
     }
 
-    private async Task UpdateAsync(
+    public async Task UpdateAsync(
         SuCaiFlowTaskContext ctx,
         CancellationToken ct = default) {
         var entity = await taskManager.FindByIdAsync(ctx.TaskId, ct);
