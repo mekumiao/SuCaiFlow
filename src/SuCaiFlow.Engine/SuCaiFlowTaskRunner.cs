@@ -44,12 +44,8 @@ public sealed class SuCaiFlowTaskRunner(
     public async Task RunAsync(SuCaiFlowDownloadTaskContext ctx) {
         var ct = ctx.CancellationToken;
 
-        if (ct.IsCancellationRequested) {
-            ctx.Completion.TrySetCanceled(ct);
-            return;
-        }
-
         try {
+            ct.ThrowIfCancellationRequested();
             await ctx.Collector.DownloadAssetAsync(ctx.AssetDescriptor, ct);
             ctx.Descriptor.DownloadIncrement();
             ctx.Completion.TrySetResult();
