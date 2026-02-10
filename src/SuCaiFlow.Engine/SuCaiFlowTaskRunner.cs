@@ -50,7 +50,7 @@ public sealed class SuCaiFlowTaskRunner(
             ctx.Descriptor.DownloadIncrement();
             ctx.Completion.TrySetResult();
             await publisher.PublishAsync<SuCaiFlowTaskDownloadProgressEvent>(new() {
-                TaskId = ctx.TaskId,
+                TaskId = ctx.Descriptor.TaskId!,
                 AssetsDownloadCount = ctx.Descriptor.AssetsDownloadCount,
                 AssetsToCollectCount = ctx.Descriptor.AssetsToCollectCount,
             }, ct);
@@ -123,7 +123,6 @@ public sealed class SuCaiFlowTaskRunner(
 
                 foreach (var item in assetDescriptors) {
                     var assetCtx = new SuCaiFlowDownloadTaskContext(
-                        ctx.TaskId,
                         descriptor,
                         item,
                         collector,
