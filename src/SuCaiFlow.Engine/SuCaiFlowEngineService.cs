@@ -39,8 +39,10 @@ public sealed class SuCaiFlowEngineService(
         var descriptor = new SuCaiFlowTaskDescriptor();
         await flowTaskManager.PopulateAsync(descriptor, entity, ct);
 
+#if !DEBUG
         if (descriptor.Status == SuCaiFlowConstants.TaskStatuses.Completed)
             throw new InvalidOperationException("任务已完成，请新建任务");
+#endif
 
         if (registry.TryRegister(descriptor, out var ctx))
             try {
