@@ -12,7 +12,7 @@ public interface ISuCaiFlowEngineSiteCollector {
 
     string? ParseObjectKey(SuCaiFlowAssetDescriptor assetDescriptor);
 
-    Task<List<SuCaiFlowAssetDescriptor>> ParsePageAsync(SuCaiFlowTaskDescriptor descriptor, int pageNum, CancellationToken cancellationToken);
+    Task<List<SuCaiFlowAssetDescriptor>> ParsePageAsync(SuCaiFlowTaskDescriptor descriptor, int pageNum, CancellationToken ct);
 
-    Task DownloadAssetAsync(SuCaiFlowAssetDescriptor descriptor, CancellationToken cancellationToken);
+    Task DownloadAssetAsync(SuCaiFlowAssetDescriptor descriptor, CancellationToken ct);
 }
