@@ -31,7 +31,7 @@ public class SuCaiFlowTaskDescriptor {
 
     private int _assetsDownloadCount;
     public int AssetsDownloadCount {
-        get => _assetsDownloadCount;
+        get => Volatile.Read(ref _assetsDownloadCount);
         set => _assetsDownloadCount = value;
     }
 
