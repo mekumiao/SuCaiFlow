@@ -9,7 +9,7 @@ public static class SuCaiFlowPlaywrightExtensions {
         return new SuCaiFlowPlaywrightBuilder(services);
     }
 
-    public static IServiceCollection AddEngine(this IServiceCollection services, Action<SuCaiFlowPlaywrightBuilder> configureOptions) {
+    public static IServiceCollection AddPlaywright(this IServiceCollection services, Action<SuCaiFlowPlaywrightBuilder> configureOptions) {
         configureOptions(services.AddPlaywright());
         return services;
     }

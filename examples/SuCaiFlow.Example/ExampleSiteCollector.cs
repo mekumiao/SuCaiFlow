@@ -4,7 +4,6 @@ using SuCaiFlow.Engine;
 namespace SuCaiFlow.Example;
 
 public class ExampleSiteCollector : ISuCaiFlowEngineSiteCollector {
-    public string SiteIdentifier => "example.com";
 
     public async Task<List<SuCaiFlowAssetDescriptor>> ParsePageAsync(SuCaiFlowTaskDescriptor descriptor, int pageNum, CancellationToken ct) {
         await Task.Delay(100, ct);
@@ -35,5 +34,9 @@ public class ExampleSiteCollector : ISuCaiFlowEngineSiteCollector {
 
     public string? ParseObjectKey(SuCaiFlowAssetDescriptor assetDescriptor) {
         throw new NotImplementedException();
+    }
+
+    public async ValueTask DisposeAsync() {
+        GC.SuppressFinalize(this);
     }
 }

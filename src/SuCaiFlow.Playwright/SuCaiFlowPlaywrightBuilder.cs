@@ -11,9 +11,19 @@ public class SuCaiFlowPlaywrightBuilder(IServiceCollection services) {
 
     public SuCaiFlowPlaywrightBuilder Configure(Action<SuCaiFlowPlaywrightOptions> configuration) {
         ArgumentNullException.ThrowIfNull(configuration);
-
         Services.Configure(configuration);
+        return this;
+    }
 
+    public SuCaiFlowPlaywrightBuilder Configure(Action<SuCaiFlowPlaywrightOptions, IServiceProvider> configuration) {
+        ArgumentNullException.ThrowIfNull(configuration);
+        Services.AddOptions<SuCaiFlowPlaywrightOptions>().Configure(configuration);
+        return this;
+    }
+
+    public SuCaiFlowPlaywrightBuilder SetProxy(string proxy) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(proxy);
+        Configure(options => options.Proxy = proxy);
         return this;
     }
 }
