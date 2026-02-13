@@ -29,17 +29,7 @@ public static class SuCaiFlowEngineExtensions {
         builder.Services.TryAddSingleton<SuCaiFlowTaskRunner>();
         builder.Services.TryAddSingleton<SuCaiFlowTaskRegistry>();
         builder.Services.TryAddSingleton<SuCaiFlowTaskScheduler>();
-        builder.Services.TryAddSingleton<SuCaiFlowEngineSiteCollectorManager>();
         builder.Services.TryAddSingleton<ISuCaiFlowEngineEventPublisher, SuCaiFlowEngineDefaultEventPublisher>();
-        builder.Services.TryAddSingleton<ISuCaiFlowEngineSiteCollectorManager>(provider => {
-            var options = provider.GetRequiredService<IOptions<SuCaiFlowEngineOptions>>().Value;
-            var service = provider.GetRequiredService<SuCaiFlowEngineSiteCollectorManager>();
-            foreach (var item in options.SiteCollectorImplementTypes) {
-                if (provider.GetService(item) is ISuCaiFlowEngineSiteCollector collector)
-                    service.RegisterCollector(collector);
-            }
-            return service;
-        });
 
         builder.Services.AddHostedService<SuCaiFlowEngineHostedService>();
 

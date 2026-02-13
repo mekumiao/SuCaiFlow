@@ -4,10 +4,7 @@ using SuCaiFlow.Abstractions;
 
 namespace SuCaiFlow.Engine;
 
-public interface ISuCaiFlowEngineSiteCollector {
-
-    string SiteIdentifier { get; }
-
+public interface ISuCaiFlowEngineSiteCollector : IAsyncDisposable {
     bool CanHandle([NotNullWhen(true)] string? url);
 
     string? ParseObjectKey(SuCaiFlowAssetDescriptor assetDescriptor);

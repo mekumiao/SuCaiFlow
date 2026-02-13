@@ -11,7 +11,7 @@ builder.Logging.AddConsole();
 
 builder.Services.AddSuCaiFlow()
                 .AddEngine(options => options
-                .AddSiteCollector<ExampleSiteCollector>()
+                .AddSiteCollector<ExampleSiteCollector>("example")
                 .UseEntityFrameworkCore()
                 .UseDbContext<SuCaiFlowDbContext>());
 

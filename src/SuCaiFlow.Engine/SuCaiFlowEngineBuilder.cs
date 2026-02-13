@@ -32,10 +32,9 @@ public class SuCaiFlowEngineBuilder(IServiceCollection services) {
         => Configure(options => options.DownloadQueueCapacity = downloadQueueCapacity);
 
     public SuCaiFlowEngineBuilder AddSiteCollector<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TSiteCollector>()
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TSiteCollector>(string identifier)
         where TSiteCollector : class, ISuCaiFlowEngineSiteCollector {
-        Configure(options => options.SiteCollectorImplementTypes.Add(typeof(TSiteCollector)));
-        Services.AddSingleton<TSiteCollector>();
+        Services.AddKeyedScoped<ISuCaiFlowEngineSiteCollector, TSiteCollector>(identifier);
         return this;
     }
 

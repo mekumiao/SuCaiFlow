@@ -12,7 +12,6 @@ public sealed class SuCaiFlowTaskRunner(
     ILogger<SuCaiFlowTaskRunner> logger,
     IOptions<SuCaiFlowEngineOptions> options,
     IServiceScopeFactory scopeFactory,
-    ISuCaiFlowEngineSiteCollectorManager collectorManager,
     ISuCaiFlowEngineEventPublisher publisher,
     SuCaiFlowTaskRegistry registry) {
     private readonly SuCaiFlowEngineOptions _options = options.Value;
@@ -27,7 +26,7 @@ public sealed class SuCaiFlowTaskRunner(
         try {
             ct.ThrowIfCancellationRequested();
             await reporter.ReportRunningAsync(ctx);
-            await ParsePagesAndDownloadAsync(ctx, scheduler, reporter, assetManager);
+            await ParsePagesAndDownloadAsync(ctx, scheduler, reporter, CreateCollector(), assetManager);
             await reporter.ReportCompletedAsync(ctx);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested) {
@@ -38,6 +37,12 @@ public sealed class SuCaiFlowTaskRunner(
         }
         finally {
             registry.Release(ctx.TaskId);
+        }
+
+        ISuCaiFlowEngineSiteCollector CreateCollector() {
+            var siteId = ctx.Descriptor.SiteIdentifier;
+            ArgumentException.ThrowIfNullOrWhiteSpace(siteId);
+            return scope.ServiceProvider.GetRequiredKeyedService<ISuCaiFlowEngineSiteCollector>(siteId);
         }
     }
 
@@ -68,19 +73,16 @@ public sealed class SuCaiFlowTaskRunner(
         SuCaiFlowTaskContext ctx,
         SuCaiFlowTaskScheduler scheduler,
         SuCaiFlowTaskStatusReporter reporter,
+        ISuCaiFlowEngineSiteCollector collector,
         ISuCaiFlowAssetManager assetManager) {
         int collected = 0;
         int currentPage = 0;
         var descriptor = ctx.Descriptor;
-        var siteId = ctx.Descriptor.SiteIdentifier;
         var ct = ctx.Cancellation.Token;
         var downloadQueueCapacity = _options.DownloadQueueCapacity;
 
-        ArgumentException.ThrowIfNullOrWhiteSpace(siteId);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(downloadQueueCapacity);
 
-        var collector = collectorManager.GetCollectorByIdentifier(siteId)
-            ?? throw new InvalidOperationException($"未找到标识为 {siteId} 的采集站实现类");
         var contextChannel = Channel.CreateBounded<SuCaiFlowDownloadTaskContext>(new BoundedChannelOptions(downloadQueueCapacity) {
             FullMode = BoundedChannelFullMode.Wait,
             SingleReader = true,

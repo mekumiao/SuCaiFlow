@@ -6,6 +6,5 @@ public class SuCaiFlowEngineOptions {
     public int RequestDelayMs { get; set; } = 1000;
     public int MaxDownloadConcurrency { get; set; } = 20;
     public int DownloadQueueCapacity { get; set; } = 200;
-    public HashSet<Type> SiteCollectorImplementTypes { get; } = [];
     public TimeProvider TimeProvider { get; set; } = default!;
 }
