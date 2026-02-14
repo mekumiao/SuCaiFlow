@@ -19,6 +19,12 @@ public class SuCaiFlowEngineBuilder(IServiceCollection services) {
         return this;
     }
 
+    public SuCaiFlowEngineBuilder Configure(Action<SuCaiFlowEngineOptions, IServiceProvider> configuration) {
+        ArgumentNullException.ThrowIfNull(configuration);
+        Services.AddOptions<SuCaiFlowEngineOptions>().Configure(configuration);
+        return this;
+    }
+
     public SuCaiFlowEngineBuilder SetMaxConcurrent(int maxConcurrency)
         => Configure(options => options.MaxConcurrency = maxConcurrency);
 
@@ -32,9 +38,11 @@ public class SuCaiFlowEngineBuilder(IServiceCollection services) {
         => Configure(options => options.DownloadQueueCapacity = downloadQueueCapacity);
 
     public SuCaiFlowEngineBuilder AddSiteCollector<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TSiteCollector>(string identifier)
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TSiteCollector>(
+        string identifier,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped)
         where TSiteCollector : class, ISuCaiFlowEngineSiteCollector {
-        Services.AddKeyedScoped<ISuCaiFlowEngineSiteCollector, TSiteCollector>(identifier);
+        Services.Add(ServiceDescriptor.DescribeKeyed(typeof(ISuCaiFlowEngineSiteCollector), identifier, typeof(TSiteCollector), lifetime));
         return this;
     }
 

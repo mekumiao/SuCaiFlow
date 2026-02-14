@@ -20,10 +20,4 @@ public class SuCaiFlowPlaywrightBuilder(IServiceCollection services) {
         Services.AddOptions<SuCaiFlowPlaywrightOptions>().Configure(configuration);
         return this;
     }
-
-    public SuCaiFlowPlaywrightBuilder SetProxy(string proxy) {
-        ArgumentException.ThrowIfNullOrWhiteSpace(proxy);
-        Configure(options => options.Proxy = proxy);
-        return this;
-    }
 }

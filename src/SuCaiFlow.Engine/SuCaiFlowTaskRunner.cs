@@ -145,7 +145,7 @@ public sealed class SuCaiFlowTaskRunner(
         }
     }
 
-    public int NextRequestDelayMilliseconds() {
+    private int NextRequestDelayMilliseconds() {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(_options.RequestDelayMs);
 
         var minMilliseconds = _options.RequestDelayMs;
