@@ -1,13 +1,16 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
 
 namespace SuCaiFlow.Playwright;
 
 public class SuCaiFlowPlaywrightBackgroundService(
     ILogger<SuCaiFlowPlaywrightBackgroundService> logger,
+    IOptions<SuCaiFlowPlaywrightOptions> options,
     SuCaiFlowPlaywrightHolder playwrightHolder) : BackgroundService {
     private readonly ILogger<SuCaiFlowPlaywrightBackgroundService> _logger = logger;
+    private readonly SuCaiFlowPlaywrightOptions _options = options.Value;
     private readonly SuCaiFlowPlaywrightHolder _playwrightHolder = playwrightHolder;
     private IPlaywright? _playwright;
     private IBrowser? _browser;
@@ -17,7 +20,7 @@ public class SuCaiFlowPlaywrightBackgroundService(
             Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", $"{AppContext.BaseDirectory}/pw-browsers");
             _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
             _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions {
-                Headless = true,
+                Headless = _options.Headless,
             });
             _playwrightHolder.SetOnce(_playwright, _browser);
             _logger.LogDebug("已启动 Playwright");
