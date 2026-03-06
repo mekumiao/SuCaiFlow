@@ -127,6 +127,12 @@ SuCaiFlow 提供以下依赖注入扩展方法:
 - AddSuCaiFlowDbContext\<T>(): 注册数据库上下文
 - AddSuCaiFlowRepositories(): 注册仓储实现
 
+## 发布 Nuget
+
+```ps1
+dotnet pack -c Release -o C:/App/Nuget/local
+```
+
 ## 许可证
 
 MIT

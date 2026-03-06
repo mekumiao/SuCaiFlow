@@ -1,6 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>Mekumiao.SuCaiFlow.EntityFrameworkCore.Models</PackageId>
+    <NoWarn>$(NoWarn);IDE0130</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Description>Relational entities for the SuCaiFlow Entity Framework Core stores.</Description>
     <PackageTags>$(PackageTags);entityframeworkcore;models</PackageTags>
   </PropertyGroup>
