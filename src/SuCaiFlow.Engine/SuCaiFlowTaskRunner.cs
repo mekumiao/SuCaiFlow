@@ -79,26 +79,12 @@ public sealed class SuCaiFlowTaskRunner(
         int currentPage = 0;
         var descriptor = ctx.Descriptor;
         var ct = ctx.Cancellation.Token;
-        var downloadQueueCapacity = _options.DownloadQueueCapacity;
 
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(downloadQueueCapacity);
-
-        var contextChannel = Channel.CreateBounded<SuCaiFlowDownloadTaskContext>(new BoundedChannelOptions(downloadQueueCapacity) {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true,
-            SingleWriter = true,
-        });
-        var completionChannel = Channel.CreateBounded<TaskCompletionSource>(new BoundedChannelOptions(downloadQueueCapacity) {
-            FullMode = BoundedChannelFullMode.Wait,
+        var completionChannel = Channel.CreateUnbounded<TaskCompletionSource>(new UnboundedChannelOptions {
             SingleReader = true,
             SingleWriter = true,
         });
 
-        var contextChannelTask = Task.Run(async () => {
-            await foreach (var item in contextChannel.Reader.ReadAllAsync(ct)) {
-                await scheduler.EnqueueAsync(item, ct);
-            }
-        }, ct);
         var completionChannelTask = Task.Run(async () => {
             await foreach (var item in completionChannel.Reader.ReadAllAsync(ct)) {
                 try { await item.Task.WaitAsync(ct); } catch { }
@@ -129,7 +115,7 @@ public sealed class SuCaiFlowTaskRunner(
                         item,
                         collector,
                         ct);
-                    await contextChannel.Writer.WriteAsync(assetCtx, ct);
+                    await scheduler.EnqueueAsync(assetCtx, ct);
                     await completionChannel.Writer.WriteAsync(assetCtx.Completion, ct);
                 }
 
@@ -138,9 +124,7 @@ public sealed class SuCaiFlowTaskRunner(
         }
         finally {
             descriptor.AssetsCollectedCount = collected;
-            contextChannel.Writer.TryComplete();
             completionChannel.Writer.TryComplete();
-            await contextChannelTask;
             await completionChannelTask;
         }
     }
