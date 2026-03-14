@@ -41,7 +41,7 @@ public class SuCaiFlowTaskDescriptor {
 
     public bool KeepAfterCancel { get; set; }
 
-    public Dictionary<string, JsonElement> Parameters { get; } = [with(StringComparer.Ordinal)];
+    public Dictionary<string, JsonElement> Parameters { get; } = new(StringComparer.Ordinal);
 
     public void MarkPending() {
         Status = SuCaiFlowConstants.TaskStatuses.Pending;
