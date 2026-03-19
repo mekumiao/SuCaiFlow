@@ -14,15 +14,21 @@ public class SuCaiFlowPlaywrightBackgroundService(
     private readonly SuCaiFlowPlaywrightHolder _playwrightHolder = playwrightHolder;
     private IPlaywright? _playwright;
     private IBrowser? _browser;
+    private IBrowserContext? _browserContext;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         try {
             Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", $"{AppContext.BaseDirectory}/pw-browsers");
             _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
-            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions {
+            _browser = await _playwright.Chromium.LaunchAsync(new() {
                 Headless = _options.Headless,
             });
-            _playwrightHolder.SetOnce(_playwright, _browser);
+            _browserContext = await _playwright.Chromium.LaunchPersistentContextAsync(
+                userDataDir: $"{AppContext.BaseDirectory}/user-data",
+                new() {
+                    Headless = _options.Headless,
+                });
+            _playwrightHolder.SetOnce(_playwright, _browser, _browserContext);
             _logger.LogDebug("已启动 Playwright");
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }

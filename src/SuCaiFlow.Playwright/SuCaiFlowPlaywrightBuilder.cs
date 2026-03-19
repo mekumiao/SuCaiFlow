@@ -20,4 +20,8 @@ public class SuCaiFlowPlaywrightBuilder(IServiceCollection services) {
         Services.AddOptions<SuCaiFlowPlaywrightOptions>().Configure(configuration);
         return this;
     }
+
+    public SuCaiFlowPlaywrightBuilder SetHeadless(bool headless) {
+        return Configure(options => options.Headless = headless);
+    }
 }
