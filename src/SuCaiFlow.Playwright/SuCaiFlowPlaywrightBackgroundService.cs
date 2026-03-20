@@ -14,7 +14,6 @@ public class SuCaiFlowPlaywrightBackgroundService(
     private readonly SuCaiFlowPlaywrightHolder _playwrightHolder = playwrightHolder;
     private IPlaywright? _playwright;
     private IBrowser? _browser;
-    private IBrowserContext? _browserContext;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         try {
@@ -23,12 +22,7 @@ public class SuCaiFlowPlaywrightBackgroundService(
             _browser = await _playwright.Chromium.LaunchAsync(new() {
                 Headless = _options.Headless,
             });
-            _browserContext = await _playwright.Chromium.LaunchPersistentContextAsync(
-                userDataDir: $"{AppContext.BaseDirectory}/user-data",
-                new() {
-                    Headless = _options.Headless,
-                });
-            _playwrightHolder.SetOnce(_playwright, _browser, _browserContext);
+            _playwrightHolder.SetOnce(_playwright, _browser);
             _logger.LogDebug("已启动 Playwright");
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
@@ -40,8 +34,10 @@ public class SuCaiFlowPlaywrightBackgroundService(
             _logger.LogError(ex, "Playwright Host Service 启动失败");
         }
         finally {
-            if (_browser != null)
+            if (_browser != null) {
+                await _browser.CloseAsync();
                 await _browser.DisposeAsync();
+            }
             _playwrightHolder.Stop();
             _playwright?.Dispose();
             _playwright = null;
