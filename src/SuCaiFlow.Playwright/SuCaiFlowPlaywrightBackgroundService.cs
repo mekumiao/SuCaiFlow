@@ -17,7 +17,7 @@ public class SuCaiFlowPlaywrightBackgroundService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         try {
-            Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", $"{AppContext.BaseDirectory}/pw-browsers");
+            Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", Path.Combine(AppContext.BaseDirectory, "pw-browsers"));
             _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
             _browser = await _playwright.Chromium.LaunchAsync(new() {
                 Headless = _options.Headless,
