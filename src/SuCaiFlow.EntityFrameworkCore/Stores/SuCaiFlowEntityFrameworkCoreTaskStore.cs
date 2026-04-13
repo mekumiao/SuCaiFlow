@@ -345,7 +345,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
     public virtual ValueTask SetErrorMessageAsync(TTask task, string? errorMessage, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.ErrorMessage = errorMessage;
+        task.ErrorMessage = errorMessage.Truncate(1000);
 
         return ValueTask.CompletedTask;
     }
