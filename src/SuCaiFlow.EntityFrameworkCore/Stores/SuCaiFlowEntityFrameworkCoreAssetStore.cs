@@ -214,11 +214,7 @@ public class SuCaiFlowEntityFrameworkCoreAssetStore<
             await reference.LoadAsync(cancellationToken);
         }
 
-        if (asset.Task is null) {
-            return null;
-        }
-
-        return ConvertIdentifierToString(asset.Task.Id);
+        return asset.Task is null ? null : ConvertIdentifierToString(asset.Task.Id);
     }
 
     public virtual ValueTask<string?> GetTitleAsync(TAsset asset, CancellationToken cancellationToken) {

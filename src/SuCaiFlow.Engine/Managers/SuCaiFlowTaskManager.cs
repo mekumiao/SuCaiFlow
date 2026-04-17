@@ -47,11 +47,7 @@ public class SuCaiFlowTaskManager<TTask>(ISuCaiFlowTaskStore<TTask> store) : ISu
 
         var task = await Store.FindByIdAsync(identifier, cancellationToken);
 
-        if (task is null) {
-            return null;
-        }
-
-        return task;
+        return task is null ? null : task;
     }
 
     public virtual ValueTask<TResult?> GetAsync<TResult>(Func<IQueryable<TTask>, IQueryable<TResult>> query, CancellationToken cancellationToken = default) {

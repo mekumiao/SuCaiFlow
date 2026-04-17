@@ -15,14 +15,8 @@ public class SuCaiFlowEntityFrameworkCoreContext<TContext> : ISuCaiFlowEntityFra
     }
 
     public ValueTask<DbContext> GetDbContextAsync(CancellationToken cancellationToken) {
-        if (cancellationToken.IsCancellationRequested) {
-            return new(Task.FromCanceled<DbContext>(cancellationToken));
-        }
-
-        if (_context is not DbContext context) {
-            return new(Task.FromException<DbContext>(new InvalidOperationException()));
-        }
-
-        return new(context);
+        return cancellationToken.IsCancellationRequested
+            ? new(Task.FromCanceled<DbContext>(cancellationToken))
+            : _context is not DbContext context ? new(Task.FromException<DbContext>(new InvalidOperationException())) : new(context);
     }
 }

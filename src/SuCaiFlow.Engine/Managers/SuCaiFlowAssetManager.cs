@@ -65,11 +65,7 @@ public class SuCaiFlowAssetManager<TAsset>(ISuCaiFlowAssetStore<TAsset> store) :
 
         var asset = await Store.FindByIdAsync(identifier, cancellationToken);
 
-        if (asset is null) {
-            return null;
-        }
-
-        return asset;
+        return asset is null ? null : asset;
     }
 
     public virtual ValueTask<TResult?> GetAsync<TResult>(Func<IQueryable<TAsset>, IQueryable<TResult>> query, CancellationToken cancellationToken = default) {

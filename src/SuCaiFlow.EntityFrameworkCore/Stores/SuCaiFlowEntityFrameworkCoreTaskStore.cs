@@ -153,21 +153,13 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
     public virtual ValueTask<DateTimeOffset?> GetCompletedAtAsync(TTask task, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (task.CompletedAt is null) {
-            return new(result: null);
-        }
-
-        return new(DateTime.SpecifyKind(task.CompletedAt.Value, DateTimeKind.Utc));
+        return task.CompletedAt is null ? new(result: null) : new(DateTime.SpecifyKind(task.CompletedAt.Value, DateTimeKind.Utc));
     }
 
     public virtual ValueTask<DateTimeOffset?> GetCreatedAtAsync(TTask task, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (task.CreatedAt is null) {
-            return new(result: null);
-        }
-
-        return new(DateTime.SpecifyKind(task.CreatedAt.Value, DateTimeKind.Utc));
+        return task.CreatedAt is null ? new(result: null) : new(DateTime.SpecifyKind(task.CreatedAt.Value, DateTimeKind.Utc));
     }
 
     public virtual ValueTask<string?> GetErrorMessageAsync(TTask task, CancellationToken cancellationToken) {
@@ -224,11 +216,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
     public virtual ValueTask<DateTimeOffset?> GetStartedAtAsync(TTask task, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (task.StartedAt is null) {
-            return new(result: null);
-        }
-
-        return new(DateTime.SpecifyKind(task.StartedAt.Value, DateTimeKind.Utc));
+        return task.StartedAt is null ? new(result: null) : new(DateTime.SpecifyKind(task.StartedAt.Value, DateTimeKind.Utc));
     }
 
     public virtual ValueTask<string?> GetStartUrlAsync(TTask task, CancellationToken cancellationToken) {

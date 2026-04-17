@@ -64,9 +64,6 @@ public static class SuCaiFlowEntityFrameworkCoreHelpers {
     }
 
     internal static string? Truncate(this string? value, int maxLength) {
-        if (string.IsNullOrEmpty(value))
-            return value;
-
-        return value.Length <= maxLength ? value : value[..maxLength];
+        return string.IsNullOrEmpty(value) ? value : value.Length <= maxLength ? value : value[..maxLength];
     }
 }
