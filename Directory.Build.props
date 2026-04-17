@@ -30,8 +30,8 @@
     <RepositoryUrl>https://github.com/mekumiao/SuCaiFlow</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;IDE0130</NoWarn>
     <PackageOutputPath>$(MSBuildThisFileDirectory)/nuget</PackageOutputPath>
   </PropertyGroup>
 

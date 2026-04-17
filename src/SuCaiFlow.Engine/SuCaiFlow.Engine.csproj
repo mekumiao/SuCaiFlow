@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <PackageId>Mekumiao.SuCaiFlow.Engine</PackageId>
-    <NoWarn>$(NoWarn);IDE0130</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

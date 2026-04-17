@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <PackageId>Mekumiao.SuCaiFlow.Playwright</PackageId>
-    <NoWarn>$(NoWarn);IDE0130</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
