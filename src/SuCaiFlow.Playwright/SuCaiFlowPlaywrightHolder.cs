@@ -8,6 +8,8 @@ public sealed class SuCaiFlowPlaywrightHolder {
     private IBrowser? _browser;
     private int _initialized; // 0 = no, 1 = yes, 2 = stopped
 
+    public Task WaitForPlaywrightAsync(CancellationToken ct = default) => _completionSource.Task.WaitAsync(ct);
+
     internal void SetOnce(IPlaywright playwright, IBrowser browser) {
         if (Interlocked.CompareExchange(ref _initialized, 1, 0) != 0)
             throw new InvalidOperationException("Playwright 已初始化或已停止");

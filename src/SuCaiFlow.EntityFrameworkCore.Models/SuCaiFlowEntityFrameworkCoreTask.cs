@@ -28,6 +28,9 @@ public class SuCaiFlowEntityFrameworkCoreTask<TKey, TAsset>
 
     public virtual string? SearchKeywords { get; set; }
 
+    /// <summary>
+    /// 开始的URL,不限长度
+    /// </summary>
     public virtual string? StartUrl { get; set; }
 
     public virtual string? Status { get; set; }

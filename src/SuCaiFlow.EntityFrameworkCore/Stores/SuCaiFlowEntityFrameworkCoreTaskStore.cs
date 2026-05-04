@@ -293,7 +293,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
     public ValueTask SetNameAsync(TTask task, string? name, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.Name = name;
+        task.Name = name.Truncate(500);
 
         return ValueTask.CompletedTask;
     }
@@ -371,7 +371,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
     public virtual ValueTask SetSearchKeywordsAsync(TTask task, string? searchKeywords, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.SearchKeywords = searchKeywords;
+        task.SearchKeywords = searchKeywords.Truncate(500);
 
         return ValueTask.CompletedTask;
     }
@@ -379,7 +379,7 @@ public class SuCaiFlowEntityFrameworkCoreTaskStore<TTask, TAsset, TKey>(ISuCaiFl
     public virtual ValueTask SetSiteIdentifierAsync(TTask task, string? siteIdentifier, CancellationToken cancellationToken) {
         ArgumentNullException.ThrowIfNull(task);
 
-        task.SiteIdentifier = siteIdentifier;
+        task.SiteIdentifier = siteIdentifier.Truncate(200);
 
         return ValueTask.CompletedTask;
     }
