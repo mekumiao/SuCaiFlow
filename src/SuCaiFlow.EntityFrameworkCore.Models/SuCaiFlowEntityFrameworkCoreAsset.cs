@@ -2,7 +2,7 @@ namespace SuCaiFlow.EntityFrameworkCore.Models;
 
 public class SuCaiFlowEntityFrameworkCoreAsset : SuCaiFlowEntityFrameworkCoreAsset<string, SuCaiFlowEntityFrameworkCoreTask> {
     public SuCaiFlowEntityFrameworkCoreAsset() {
-        Id = Guid.NewGuid().ToString();
+        Id = Guid.CreateVersion7().ToString();
     }
 }
 

@@ -14,9 +14,9 @@ public class ExampleSiteCollector : ISuCaiFlowEngineSiteCollector {
         }
         var asset = new SuCaiFlowAssetDescriptor {
             TaskId = Guid.Empty.ToString(),
-            Name = $"Asset_{Guid.NewGuid()}",
+            Name = $"Asset_{Guid.CreateVersion7()}",
             OriginalUrl = "https://www.baidu.com/xxx.jpg",
-            ObjectKey = $"./downloads/{Guid.NewGuid()}.jpg",
+            ObjectKey = $"./downloads/{Guid.CreateVersion7()}.jpg",
             ContentType = "image/jpeg",
             Status = SuCaiFlowConstants.DownloadStatuses.Completed,
             CreatedAt = DateTime.UtcNow
