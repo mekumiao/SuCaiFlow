@@ -1,6 +1,8 @@
 namespace SuCaiFlow.Engine;
 
 public class SuCaiFlowEngineOptions {
+    public const string SectionName = "SuCaiFlowEngine";
+
     public int MaxConcurrency { get; set; } = 5;
     public int QueueCapacity { get; set; } = 50;
     public int RequestDelayMs { get; set; } = 1000;
