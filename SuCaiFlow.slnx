@@ -4,9 +4,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/examples/">
-    <Project Path="examples/SuCaiFlow.Example/SuCaiFlow.Example.csproj" />
-  </Folder>
   <Folder Name="/root/">
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
@@ -15,11 +12,10 @@
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/SuCaiFlow.Abstractions/SuCaiFlow.Abstractions.csproj" />
-    <Project Path="src/SuCaiFlow.Engine/SuCaiFlow.Engine.csproj" />
-    <Project Path="src/SuCaiFlow.EntityFrameworkCore.Models/SuCaiFlow.EntityFrameworkCore.Models.csproj" />
-    <Project Path="src/SuCaiFlow.EntityFrameworkCore/SuCaiFlow.EntityFrameworkCore.csproj" />
-    <Project Path="src/SuCaiFlow.Playwright/SuCaiFlow.Playwright.csproj" />
-  </Folder>
+  <Project Path="examples/SuCaiFlow.Example/SuCaiFlow.Example.csproj" />
+  <Project Path="src/SuCaiFlow.Abstractions/SuCaiFlow.Abstractions.csproj" />
+  <Project Path="src/SuCaiFlow.Engine/SuCaiFlow.Engine.csproj" />
+  <Project Path="src/SuCaiFlow.EntityFrameworkCore.Models/SuCaiFlow.EntityFrameworkCore.Models.csproj" />
+  <Project Path="src/SuCaiFlow.EntityFrameworkCore/SuCaiFlow.EntityFrameworkCore.csproj" />
+  <Project Path="src/SuCaiFlow.Playwright/SuCaiFlow.Playwright.csproj" />
 </Solution>
