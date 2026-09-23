@@ -130,7 +130,14 @@ SuCaiFlow 提供以下依赖注入扩展方法:
 ## 发布 Nuget
 
 ```ps1
-dotnet pack -c Release -o C:/App/Nuget/local
+# 添加本地源
+dotnet nuget add source "C:\App\Nuget\local" --name local
+# 添加git标签
+git tag v1.1.2 -m "Release v1.1.2"
+# 打包
+./pack
+# 发布到源
+dotnet nuget push .\nupkg\Mekumiao.*.nupkg -s local
 ```
 
 ## 许可证
