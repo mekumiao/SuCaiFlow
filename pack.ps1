@@ -2,32 +2,37 @@
   # Release配置
   [string]$Configuration = "Release",
   # 输出目录
-  [string]$Output = "./nupkg"
+  [string]$Output = "./nupkg",
+  # 指定版本(如 1.0.0)，未指定时使用 Git 最新 Tag
+  [string]$Version
 )
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "获取 Git 最新 Tag..."
+if ([string]::IsNullOrWhiteSpace($Version)) {
+  Write-Host "获取 Git 最新 Tag..."
 
-# 获取最新tag
-$tag = git describe --tags --abbrev=0
+  # 获取最新tag
+  $tag = git describe --tags --abbrev=0
 
-if ([string]::IsNullOrWhiteSpace($tag)) {
-  throw "没有找到 Git Tag"
+  if ([string]::IsNullOrWhiteSpace($tag)) {
+    throw "没有找到 Git Tag"
+  }
+
+  Write-Host "Git Tag: $tag"
+
+  $Version = $tag
 }
 
-Write-Host "Git Tag: $tag"
-
-
 # 去掉 v 前缀
-$version = $tag.TrimStart("v")
+$version = $Version.TrimStart("v")
 
 Write-Host "Package Version: $version"
 
 
 # 简单SemVer检查
 if ($version -notmatch '^\d+\.\d+\.\d+([\-\.].+)?$') {
-  throw "Tag格式错误: $tag，要求类似 v1.0.0"
+  throw "版本格式错误: $Version，要求类似 v1.0.0"
 }
 
 
